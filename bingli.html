@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>病历讨论 - 医生端</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-bg: #0a0e27;
+            --secondary-bg: #1a1f3a;
+            --accent-color: #10b981;
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
+            --status-active: #10b981;
+            --status-pending: #f59e0b;
+            --status-closed: #6b7280;
+            --priority-high: #ef4444;
+            --priority-medium: #f59e0b;
+            --priority-low: #10b981;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        header {
+            background: rgba(26, 31, 58, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--accent-color), #059669);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .logo-text h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+
+        .logo-text p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .back-button {
+            padding: 0.75rem 1.5rem;
+            background: rgba(16, 185, 129, 0.1);
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .back-button:hover {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 1rem;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 12px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .page-header {
+            background: rgba(26, 31, 58, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 2px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .page-header h2 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: var(--accent-color);
+        }
+
+        .page-header p {
+            color: var(--text-secondary);
+        }
+
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(26, 31, 58, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 1.5rem;
+            border: 2px solid rgba(16, 185, 129, 0.2);
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .stat-card:hover {
+            border-color: var(--accent-color);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.2);
+        }
+
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-active .stat-number { color: var(--status-active); }
+        .stat-pending .stat-number { color: var(--status-pending); }
+        .stat-total .stat-number { color: var(--accent-color); }
+        .stat-participants .stat-number { color: #8b5cf6; }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .discussion-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-select {
+            padding: 0.75rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            min-width: 150px;
+            transition: all 0.3s;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .search-box {
+            position: relative;
+            min-width: 250px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 3rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .action-button {
+            padding: 0.75rem 1.5rem;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .action-button:hover {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .discussions-container {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 2rem;
+            min-height: 600px;
+        }
+
+        .discussions-list {
+            background: rgba(26, 31, 58, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 1.5rem;
+            border: 2px solid rgba(16, 185, 129, 0.2);
+            overflow-y: auto;
+        }
+
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .list-header h3 {
+            font-size: 1.25rem;
+            color: var(--accent-color);
+        }
+
+        .discussion-items {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .discussion-item {
+            background: rgba(10, 14, 39, 0.5);
+            border-radius: 12px;
+            padding: 1.25rem;
+            border: 1px solid rgba(16, 185, 129, 0.1);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .discussion-item:hover {
+            border-color: var(--accent-color);
+            transform: translateX(3px);
+        }
+
+        .discussion-item.active {
+            border-color: var(--accent-color);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.75rem;
+        }
+
+        .patient-info h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: var(--text-primary);
+        }
+
+        .patient-meta {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .discussion-status {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .status-active { background: rgba(16, 185, 129, 0.2); color: var(--status-active); }
+        .status-pending { background: rgba(245, 158, 11, 0.2); color: var(--status-pending); }
+        .status-closed { background: rgba(107, 114, 128, 0.2); color: var(--status-closed); }
+
+        .item-preview {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .item-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .participants {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .participant-avatar {
+            width: 20px;
+            height: 20px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.625rem;
+        }
+
+        .discussion-detail {
+            background: rgba(26, 31, 58, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 1.5rem;
+            border: 2px solid rgba(16, 185, 129, 0.2);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .patient-detail {
+            flex: 1;
+        }
+
+        .patient-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .patient-details {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .case-tags {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .case-tag {
+            padding: 0.25rem 0.75rem;
+            border-radius: 16px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .tag-high { background: rgba(239, 68, 68, 0.2); color: var(--priority-high); }
+        .tag-medium { background: rgba(245, 158, 11, 0.2); color: var(--priority-medium); }
+        .tag-low { background: rgba(16, 185, 129, 0.2); color: var(--priority-low); }
+        .tag-special { background: rgba(139, 92, 246, 0.2); color: #8b5cf6; }
+
+        .case-info {
+            margin-bottom: 2rem;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .info-item {
+            font-size: 0.875rem;
+        }
+
+        .info-label {
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+        }
+
+        .info-value {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .case-description {
+            background: rgba(10, 14, 39, 0.5);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .description-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: var(--accent-color);
+        }
+
+        .description-content {
+            font-size: 0.875rem;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+
+        .discussion-messages {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 1.5rem;
+            padding-right: 0.5rem;
+        }
+
+        .messages-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .message {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            border-radius: 12px;
+            background: rgba(10, 14, 39, 0.3);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-color), #059669);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .message-content {
+            flex: 1;
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .message-author {
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .message-text {
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+
+        .message-self {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .message-input {
+            display: flex;
+            gap: 1rem;
+            padding-top: 1rem;
+            border-top: 2px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .input-box {
+            flex: 1;
+            position: relative;
+        }
+
+        .message-textarea {
+            width: 100%;
+            min-height: 60px;
+            padding: 0.75rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            resize: vertical;
+        }
+
+        .message-textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .send-button {
+            padding: 0.75rem 1.5rem;
+            background: var(--accent-color);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            align-self: flex-end;
+        }
+
+        .send-button:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-title {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-description {
+            font-size: 0.875rem;
+            margin-bottom: 1.5rem;
+        }
+
+        @media (max-width: 1024px) {
+            .discussions-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .discussions-list {
+                max-height: 400px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-buttons {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .quick-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .discussion-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box {
+                width: 100%;
+            }
+
+            .action-buttons {
+                justify-content: stretch;
+            }
+
+            .action-button {
+                flex: 1;
+                justify-content: center;
+            }
+
+            .detail-header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">💬</div>
+                <div class="logo-text">
+                    <h1>病历讨论</h1>
+                    <p>多学科协作平台</p>
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <a href="doctor.html" class="back-button">← 返回医生端</a>
+                <div class="user-info">
+                    <div class="user-avatar">🩺</div>
+                    <span class="user-name">李医生</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="page-header">
+            <h2>病历讨论平台</h2>
+            <p>多学科协作讨论，提高诊疗质量 | 今日有 3 个活跃讨论</p>
+        </section>
+
+        <div class="quick-stats">
+            <div class="stat-card stat-active">
+                <div class="stat-icon">💬</div>
+                <div class="stat-number" id="activeDiscussions">3</div>
+                <div class="stat-label">活跃讨论</div>
+            </div>
+            <div class="stat-card stat-pending">
+                <div class="stat-icon">⏳</div>
+                <div class="stat-number" id="pendingDiscussions">2</div>
+                <div class="stat-label">待回复讨论</div>
+            </div>
+            <div class="stat-card stat-total">
+                <div class="stat-icon">📋</div>
+                <div class="stat-number" id="totalDiscussions">12</div>
+                <div class="stat-label">总讨论数</div>
+            </div>
+            <div class="stat-card stat-participants">
+                <div class="stat-icon">👥</div>
+                <div class="stat-number" id="totalParticipants">18</div>
+                <div class="stat-label">参与医生</div>
+            </div>
+        </div>
+
+        <div class="discussion-controls">
+            <div class="filter-group">
+                <select class="filter-select" id="statusFilter">
+                    <option value="all">全部状态</option>
+                    <option value="active">活跃</option>
+                    <option value="pending">待回复</option>
+                    <option value="closed">已关闭</option>
+                </select>
+                <select class="filter-select" id="departmentFilter">
+                    <option value="all">全部科室</option>
+                    <option value="internal">内科</option>
+                    <option value="surgery">外科</option>
+                    <option value="cardiology">心内科</option>
+                    <option value="neurology">神经科</option>
+                </select>
+                <select class="filter-select" id="priorityFilter">
+                    <option value="all">全部优先级</option>
+                    <option value="high">高优先级</option>
+                    <option value="medium">中优先级</option>
+                    <option value="low">低优先级</option>
+                </select>
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" id="searchInput" placeholder="搜索患者或关键词...">
+                </div>
+            </div>
+            <div class="action-buttons">
+                <button class="action-button" onclick="startNewDiscussion()">
+                    <span>+</span> 新建讨论
+                </button>
+                <button class="action-button" onclick="refreshDiscussions()">
+                    <span>🔄</span> 刷新
+                </button>
+            </div>
+        </div>
+
+        <div class="discussions-container">
+            <div class="discussions-list">
+                <div class="list-header">
+                    <h3>讨论列表</h3>
+                    <span class="discussion-status status-active" id="filteredCount">3</span>
+                </div>
+                <div class="discussion-items" id="discussionItems">
+                    <!-- 讨论项目将通过JavaScript动态加载 -->
+                </div>
+            </div>
+
+            <div class="discussion-detail" id="discussionDetail">
+                <!-- 讨论详情将通过JavaScript动态加载 -->
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // 模拟病历讨论数据
+        const discussionsData = [
+            {
+                id: "D001",
+                patientName: "张明",
+                patientId: "P20251213001",
+                age: 45,
+                gender: "男",
+                department: "呼吸内科",
+                diagnosis: "难治性肺炎",
+                priority: "high",
+                status: "active",
+                createdBy: "王主任",
+                createdAt: "2025-12-13 08:30",
+                lastUpdate: "2025-12-13 14:20",
+                participants: ["王主任", "李医生", "张医生", "刘主任"],
+                caseDescription: "患者入院后经广谱抗生素治疗2周，肺部感染无明显改善。CT显示右肺下叶实变影持续存在。血常规提示白细胞持续升高。目前面临治疗方案调整的困境。",
+                messages: [
+                    {
+                        id: "M001",
+                        author: "王主任",
+                        role: "主任医师",
+                        time: "08:30",
+                        content: "各位同事，这是一例难治性肺炎患者。患者入院后使用哌拉西林他唑巴坦治疗2周，临床症状改善不明显。CT显示右肺下叶实变影持续存在。请大家讨论下一步治疗方案。",
+                        isSelf: false
+                    },
+                    {
+                        id: "M002",
+                        author: "李医生",
+                        role: "主治医师",
+                        time: "09:15",
+                        content: "建议完善病原学检查，包括支气管镜肺泡灌洗和病原体基因测序。同时需要排除非感染性因素，如结缔组织病相关性肺炎。",
+                        isSelf: true
+                    },
+                    {
+                        id: "M003",
+                        author: "张医生",
+                        role: "呼吸科专家",
+                        time: "10:45",
+                        content: "同意李医生的意见。从CT影像看，需要警惕真菌感染可能。建议加做G试验和GM试验。如果条件允许，可考虑肺活检。",
+                        isSelf: false
+                    },
+                    {
+                        id: "M004",
+                        author: "刘主任",
+                        role: "感染科主任",
+                        time: "14:20",
+                        content: "建议调整抗生素方案为美罗培南联合万古霉素，同时开始经验性抗真菌治疗（伏立康唑）。今日安排支气管镜检查，完善病原学诊断。",
+                        isSelf: false
+                    }
+                ]
+            },
+            {
+                id: "D002",
+                patientName: "李小红",
+                patientId: "P20251213002",
+                age: 62,
+                gender: "女",
+                department: "心内科",
+                diagnosis: "顽固性高血压",
+                priority: "medium",
+                status: "active",
+                createdBy: "张医生",
+                createdAt: "2025-12-12 15:20",
+                lastUpdate: "2025-12-13 11:45",
+                participants: ["张医生", "李医生", "王主任", "赵医生"],
+                caseDescription: "患者高血压病史10年，目前服用三种降压药物（氨氯地平、培哚普利、氢氯噻嗪）血压仍控制不佳，维持在150-160/90-100mmHg。24小时动态血压监测显示昼夜节律消失。",
+                messages: [
+                    {
+                        id: "M001",
+                        author: "张医生",
+                        role: "主治医师",
+                        time: "15:20",
+                        content: "患者为顽固性高血压，三联药物效果不佳。已排除继发性高血压可能。请大家讨论下一步治疗方案选择。",
+                        isSelf: false
+                    },
+                    {
+                        id: "M002",
+                        author: "王主任",
+                        role: "主任医师",
+                        time: "16:30",
+                        content: "建议完善肾上腺CT检查，排除肾上腺微小腺瘤可能。同时可考虑加用螺内酯或α受体阻滞剂。",
+                        isSelf: false
+                    },
+                    {
+                        id: "M003",
+                        author: "李医生",
+                        role: "主治医师",
+                        time: "11:45",
+                        content: "同意王主任意见。另外建议行肾动脉超声检查，排除肾动脉狭窄。患者近期可考虑行肾动脉造影检查。",
+                        isSelf: true
+                    }
+                ]
+            },
+            {
+                id: "D003",
+                patientName: "王强",
+                patientId: "P20251213003",
+                age: 38,
+                gender: "男",
+                department: "内分泌科",
+                diagnosis: "甲状腺结节性质待查",
+                priority: "low",
+                status: "active",
+                createdBy: "赵医生",
+                createdAt: "2025-12-13 10:15",
+                lastUpdate: "2025-12-13 13:30",
+                participants: ["赵医生", "李医生", "钱主任"],
+                caseDescription: "患者体检发现甲状腺右叶结节，TI-RADS 4A类。超声提示结节大小1.2×0.8cm，边界不清，内有微钙化。患者无明显症状，甲状腺功能正常。",
+                messages: [
+                    {
+                        id: "M001",
+                        author: "赵医生",
+                        role: "主治医师",
+                        time: "10:15",
+                        content: "患者甲状腺结节TI-RADS 4A类，有一定恶性风险。但患者年轻，无明显症状。请讨论下一步处理方案：穿刺活检还是继续观察？",
+                        isSelf: false
+                    },
+                    {
+                        id: "M002",
+                        author: "钱主任",
+                        role: "主任医师",
+                        time: "12:30",
+                        content: "建议行甲状腺细针穿刺活检。如果病理结果为良性，可继续观察；如果不典型或可疑恶性，建议手术切除。",
+                        isSelf: false
+                    },
+                    {
+                        id: "M003",
+                        author: "李医生",
+                        role: "主治医师",
+                        time: "13:30",
+                        content: "同意钱主任意见。另外建议患者行甲状腺球蛋白和降钙素检查，排除髓样癌可能。",
+                        isSelf: true
+                    }
+                ]
+            },
+            {
+                id: "D004",
+                patientName: "赵丽",
+                patientId: "P20251213004",
+                age: 28,
+                gender: "女",
+                department: "妇产科",
+                diagnosis: "复发性流产",
+                priority: "high",
+                status: "pending",
+                createdBy: "孙医生",
+                createdAt: "2025-12-13 09:00",
+                lastUpdate: "2025-12-13 09:00",
+                participants: ["孙医生"],
+                caseDescription: "患者3年内连续3次自然流产，均在孕8-10周。夫妻双方染色体检查正常。患者抗磷脂抗体阴性，子宫形态正常。目前原因不明，患者心理压力大。",
+                messages: [
+                    {
+                        id: "M001",
+                        author: "孙医生",
+                        role: "主治医师",
+                        time: "09:00",
+                        content: "患者为复发性流产，常规检查均正常。请各位专家讨论可能的原因及进一步检查治疗方案。",
+                        isSelf: false
+                    }
+                ]
+            },
+            {
+                id: "D005",
+                patientName: "刘建国",
+                patientId: "P20251213005",
+                age: 55,
+                gender: "男",
+                department: "神经科",
+                diagnosis: "不明原因头痛",
+                priority: "medium",
+                status: "closed",
+                createdBy: "周医生",
+                createdAt: "2025-12-10 14:20",
+                lastUpdate: "2025-12-12 16:45",
+                participants: ["周医生", "李医生", "吴主任", "郑医生"],
+                caseDescription: "患者持续性头痛3个月，位置不固定，性质为胀痛。头颅MRI、MRA检查均正常。颈动脉超声正常。治疗效果不佳。",
+                messages: [
+                    {
+                        id: "M001",
+                        author: "周医生",
+                        role: "主治医师",
+                        time: "14:20",
+                        content: "患者慢性头痛原因待查，各种检查均正常。请大家讨论可能的原因及治疗方案。",
+                        isSelf: false
+                    },
+                    {
+                        id: "M002",
+                        author: "吴主任",
+                        role: "主任医师",
+                        time: "15:30",
+                        content: "建议完善动态脑电图和经颅多普勒检查。同时需排除紧张性头痛和偏头痛可能。",
+                        isSelf: false
+                    },
+                    {
+                        id: "M003",
+                        author: "李医生",
+                        role: "主治医师",
+                        time: "16:15",
+                        content: "同意吴主任意见。另外建议心理科会诊，排除焦虑抑郁导致的躯体化症状。",
+                        isSelf: true
+                    },
+                    {
+                        id: "M004",
+                        author: "郑医生",
+                        role: "心理科医生",
+                        time: "16:45",
+                        content: "已会诊，考虑为焦虑状态导致的紧张性头痛。建议认知行为治疗联合药物干预。",
+                        isSelf: false
+                    }
+                ]
+            }
+        ];
+
+        // 当前选中的讨论ID
+        let currentDiscussionId = "D001";
+
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            renderDiscussionList();
+            renderDiscussionDetail(currentDiscussionId);
+            updateStats();
+            setupEventListeners();
+        });
+
+        // 渲染讨论列表
+        function renderDiscussionList(filteredData = discussionsData) {
+            const discussionItems = document.getElementById('discussionItems');
+            discussionItems.innerHTML = '';
+
+            if (filteredData.length === 0) {
+                discussionItems.innerHTML = `
+                    <div class="empty-state" style="padding: 2rem;">
+                        <div class="empty-icon">💬</div>
+                        <div class="empty-title">无相关讨论</div>
+                        <div class="empty-description">当前筛选条件下没有找到讨论记录</div>
+                    </div>
+                `;
+                document.getElementById('filteredCount').textContent = '0';
+                return;
+            }
+
+            filteredData.forEach(discussion => {
+                const statusText = {
+                    'active': '活跃',
+                    'pending': '待回复',
+                    'closed': '已关闭'
+                }[discussion.status];
+
+                const statusClass = `status-${discussion.status}`;
+
+                const priorityText = {
+                    'high': '高',
+                    'medium': '中',
+                    'low': '低'
+                }[discussion.priority];
+
+                const discussionItem = document.createElement('div');
+                discussionItem.className = `discussion-item ${discussion.id === currentDiscussionId ? 'active' : ''}`;
+                discussionItem.innerHTML = `
+                    <div class="item-header">
+                        <div class="patient-info">
+                            <h4>${discussion.patientName} (${discussion.age}岁)</h4>
+                            <div class="patient-meta">
+                                ${discussion.patientId} | ${discussion.department}
+                            </div>
+                        </div>
+                        <span class="discussion-status ${statusClass}">${statusText}</span>
+                    </div>
+                    
+                    <div class="item-preview">${discussion.caseDescription}</div>
+                    
+                    <div class="item-footer">
+                        <div class="participants">
+                            ${discussion.participants.slice(0, 3).map(p => 
+                                `<div class="participant-avatar">${p.charAt(0)}</div>`
+                            ).join('')}
+                            ${discussion.participants.length > 3 ? 
+                                `<span>+${discussion.participants.length - 3}</span>` : ''}
+                        </div>
+                        <div>
+                            优先级：<span style="color: ${
+                                discussion.priority === 'high' ? 'var(--priority-high)' :
+                                discussion.priority === 'medium' ? 'var(--priority-medium)' :
+                                'var(--priority-low)'
+                            }">${priorityText}</span>
+                        </div>
+                    </div>
+                `;
+                
+                discussionItem.onclick = () => {
+                    currentDiscussionId = discussion.id;
+                    renderDiscussionList(filteredData);
+                    renderDiscussionDetail(discussion.id);
+                };
+                
+                discussionItems.appendChild(discussionItem);
+            });
+
+            document.getElementById('filteredCount').textContent = filteredData.length;
+        }
+
+        // 渲染讨论详情
+        function renderDiscussionDetail(discussionId) {
+            const discussion = discussionsData.find(d => d.id === discussionId);
+            const discussionDetail = document.getElementById('discussionDetail');
+
+            if (!discussion) {
+                discussionDetail.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">💬</div>
+                        <div class="empty-title">选择讨论查看详情</div>
+                        <div class="empty-description">请从左侧列表中选择一个讨论查看详细内容</div>
+                    </div>
+                `;
+                return;
+            }
+
+            const priorityClass = `tag-${discussion.priority}`;
+
+            discussionDetail.innerHTML = `
+                <div class="detail-header">
+                    <div class="patient-detail">
+                        <div class="patient-name">${discussion.patientName} (${discussion.age}岁 ${discussion.gender})</div>
+                        <div class="patient-details">
+                            ${discussion.patientId} | ${discussion.department} | 诊断：${discussion.diagnosis}
+                        </div>
+                        <div class="case-tags">
+                            <span class="case-tag ${priorityClass}">优先级：${
+                                discussion.priority === 'high' ? '高' :
+                                discussion.priority === 'medium' ? '中' : '低'
+                            }</span>
+                            <span class="case-tag tag-special">${discussion.department}</span>
+                            <span class="case-tag status-${discussion.status}">${
+                                discussion.status === 'active' ? '活跃' :
+                                discussion.status === 'pending' ? '待回复' : '已关闭'
+                            }</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="case-info">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">发起医生</div>
+                            <div class="info-value">${discussion.createdBy}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">发起时间</div>
+                            <div class="info-value">${discussion.createdAt}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">最后更新</div>
+                            <div class="info-value">${discussion.lastUpdate}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">参与人数</div>
+                            <div class="info-value">${discussion.participants.length}人</div>
+                        </div>
+                    </div>
+
+                    <div class="case-description">
+                        <div class="description-title">病例描述</div>
+                        <div class="description-content">${discussion.caseDescription}</div>
+                    </div>
+                </div>
+
+                <div class="discussion-messages">
+                    <div class="messages-container" id="messagesContainer">
+                        ${discussion.messages.map(msg => `
+                            <div class="message ${msg.isSelf ? 'message-self' : ''}">
+                                <div class="message-avatar">${msg.author.charAt(0)}</div>
+                                <div class="message-content">
+                                    <div class="message-header">
+                                        <div class="message-author">${msg.author} · ${msg.role}</div>
+                                        <div class="message-time">${msg.time}</div>
+                                    </div>
+                                    <div class="message-text">${msg.content}</div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div class="message-input">
+                    <div class="input-box">
+                        <textarea class="message-textarea" id="messageInput" 
+                                  placeholder="输入您的讨论意见... (按Enter发送，Shift+Enter换行)"></textarea>
+                    </div>
+                    <button class="send-button" onclick="sendMessage()">发送</button>
+                </div>
+            `;
+
+            // 滚动到最新消息
+            const messagesContainer = document.getElementById('messagesContainer');
+            if (messagesContainer) {
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+
+            // 设置消息输入框的键盘事件
+            const messageInput = document.getElementById('messageInput');
+            if (messageInput) {
+                messageInput.focus();
+                messageInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage();
+                    }
+                });
+            }
+        }
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            const statusFilter = document.getElementById('statusFilter');
+            const departmentFilter = document.getElementById('departmentFilter');
+            const priorityFilter = document.getElementById('priorityFilter');
+            const searchInput = document.getElementById('searchInput');
+
+            [statusFilter, departmentFilter, priorityFilter].forEach(filter => {
+                filter.addEventListener('change', filterDiscussions);
+            });
+            
+            searchInput.addEventListener('input', filterDiscussions);
+        }
+
+        // 过滤讨论
+        function filterDiscussions() {
+            const status = document.getElementById('statusFilter').value;
+            const department = document.getElementById('departmentFilter').value;
+            const priority = document.getElementById('priorityFilter').value;
+            const search = document.getElementById('searchInput').value.toLowerCase();
+
+            let filtered = discussionsData;
+
+            if (status !== 'all') {
+                filtered = filtered.filter(d => d.status === status);
+            }
+
+            if (department !== 'all') {
+                filtered = filtered.filter(d => d.department === department);
+            }
+
+            if (priority !== 'all') {
+                filtered = filtered.filter(d => d.priority === priority);
+            }
+
+            if (search) {
+                filtered = filtered.filter(d => 
+                    d.patientName.toLowerCase().includes(search) ||
+                    d.patientId.toLowerCase().includes(search) ||
+                    d.diagnosis.toLowerCase().includes(search) ||
+                    d.caseDescription.toLowerCase().includes(search)
+                );
+            }
+
+            renderDiscussionList(filtered);
+            
+            // 如果当前选中的讨论不在过滤结果中，选择第一个
+            if (filtered.length > 0 && !filtered.find(d => d.id === currentDiscussionId)) {
+                currentDiscussionId = filtered[0].id;
+                renderDiscussionDetail(currentDiscussionId);
+            } else if (filtered.length === 0) {
+                currentDiscussionId = null;
+                renderDiscussionDetail(null);
+            }
+        }
+
+        // 更新统计信息
+        function updateStats() {
+            const active = discussionsData.filter(d => d.status === 'active').length;
+            const pending = discussionsData.filter(d => d.status === 'pending').length;
+            const total = discussionsData.length;
+            
+            // 计算参与医生总数
+            const allParticipants = new Set();
+            discussionsData.forEach(d => {
+                d.participants.forEach(p => allParticipants.add(p));
+            });
+            const participants = allParticipants.size;
+
+            document.getElementById('activeDiscussions').textContent = active;
+            document.getElementById('pendingDiscussions').textContent = pending;
+            document.getElementById('totalDiscussions').textContent = total;
+            document.getElementById('totalParticipants').textContent = participants;
+        }
+
+        // 发送消息
+        function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value.trim();
+            
+            if (!message) {
+                alert('请输入消息内容');
+                return;
+            }
+
+            const discussion = discussionsData.find(d => d.id === currentDiscussionId);
+            if (!discussion) return;
+
+            // 添加新消息
+            const newMessage = {
+                id: `M${(discussion.messages.length + 1).toString().padStart(3, '0')}`,
+                author: "李医生",
+                role: "主治医师",
+                time: new Date().toLocaleTimeString('zh-CN', { 
+                    hour: '2-digit', 
+                    minute: '2-digit'
+                }),
+                content: message,
+                isSelf: true
+            };
+
+            discussion.messages.push(newMessage);
+            discussion.lastUpdate = `${new Date().toLocaleDateString('zh-CN')} ${newMessage.time}`;
+            
+            // 如果当前用户不在参与者列表中，添加进去
+            if (!discussion.participants.includes("李医生")) {
+                discussion.participants.push("李医生");
+            }
+
+            // 更新状态为活跃
+            if (discussion.status === 'pending') {
+                discussion.status = 'active';
+            }
+
+            // 清空输入框
+            messageInput.value = '';
+            
+            // 重新渲染详情
+            renderDiscussionDetail(currentDiscussionId);
+            renderDiscussionList();
+            updateStats();
+            
+            // 模拟其他医生回复（演示用）
+            setTimeout(() => {
+                if (Math.random() > 0.5) {
+                    const replies = [
+                        "同意您的观点，这个方案确实值得考虑。",
+                        "感谢分享，从另一个角度来看...",
+                        "我补充一点，还需要考虑患者的肝功能情况。",
+                        "很好的建议，我们可以在下次查房时讨论这个方案。"
+                    ];
+                    
+                    const randomReply = replies[Math.floor(Math.random() * replies.length)];
+                    const doctorNames = ["张医生", "王主任", "刘主任", "赵医生"];
+                    const randomDoctor = doctorNames[Math.floor(Math.random() * doctorNames.length)];
+                    
+                    const replyMessage = {
+                        id: `M${(discussion.messages.length + 1).toString().padStart(3, '0')}`,
+                        author: randomDoctor,
+                        role: randomDoctor.includes("主任") ? "主任医师" : "主治医师",
+                        time: new Date().toLocaleTimeString('zh-CN', { 
+                            hour: '2-digit', 
+                            minute: '2-digit'
+                        }),
+                        content: randomReply,
+                        isSelf: false
+                    };
+
+                    discussion.messages.push(replyMessage);
+                    discussion.lastUpdate = `${new Date().toLocaleDateString('zh-CN')} ${replyMessage.time}`;
+                    
+                    if (!discussion.participants.includes(randomDoctor)) {
+                        discussion.participants.push(randomDoctor);
+                    }
+                    
+                    renderDiscussionDetail(currentDiscussionId);
+                    renderDiscussionList();
+                    updateStats();
+                }
+            }, 3000);
+        }
+
+        // 开始新讨论
+        function startNewDiscussion() {
+            alert('新建病历讨论功能（打开新讨论创建表单）\n\n演示功能：在实际应用中，这里会打开表单让医生填写病例信息并创建新讨论。');
+        }
+
+        // 刷新讨论
+        function refreshDiscussions() {
+            renderDiscussionList();
+            renderDiscussionDetail(currentDiscussionId);
+            updateStats();
+            alert('讨论列表已刷新');
+        }
+
+        // 点击讨论列表外部关闭（移动端）
+        window.onclick = function(event) {
+            if (window.innerWidth <= 1024) {
+                const discussionList = document.querySelector('.discussions-list');
+                const discussionDetail = document.querySelector('.discussion-detail');
+                
+                if (event.target.closest('.discussions-list')) {
+                    discussionDetail.style.display = 'none';
+                } else if (event.target.closest('.discussion-detail')) {
+                    discussionList.style.display = 'none';
+                }
+            }
+        }
+    </script>
+</body>
+</html>

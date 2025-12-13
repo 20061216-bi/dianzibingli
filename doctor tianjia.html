@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"/>
+  <title>医生端-患者信息录入</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:PingFang SC,Microsoft YaHei}
+    body{display:flex;height:100vh;background:#f3f5f8}
+    /* 左侧面板 */
+    .left{width:280px;background:#fff;border-right:1px solid #e8e8e8;display:flex;flex-direction:column}
+    .top-bar{padding:12px;border-bottom:1px solid #e8e8e8}
+    .add-btn{width:100%;padding:8px;background:#1890ff;color:#fff;border:none;border-radius:4px;cursor:pointer}
+    .pat-list{flex:1;overflow-y:auto}
+    .pat-item{padding:10px 12px;border-bottom:1px solid #f0f0f0;cursor:pointer}
+    .pat-item:hover{background:#e6f7ff}
+    .pat-item.active{background:#bae7ff}
+    /* 右侧表单 */
+    .right{flex:1;display:flex;flex-direction:column;padding:20px}
+    .section{background:#fff;padding:15px;margin-bottom:15px;border-radius:6px;box-shadow:0 2px 4px rgba(0,0,0,.05)}
+    .section h3{margin-bottom:10px;font-size:15px}
+    .row{display:flex;gap:12px;margin-bottom:10px}
+    .row label{width:70px;font-size:13px;line-height:30px}
+    .row input,.row select{flex:1;padding:6px 8px;border:1px solid #d9d9d9;border-radius:4px}
+    .save-btn{background:#52c41a;color:#fff;border:none;padding:8px 20px;border-radius:4px;cursor:pointer}
+  </style>
+</head>
+<body>
+
+<!-- 左侧患者列表 -->
+<aside class="left">
+  <div class="top-bar">
+    <button class="add-btn" onclick="addNewPat()">+ 新增患者</button>
+  </div>
+  <div class="pat-list" id="patList"></div>
+</aside>
+
+<!-- 右侧录入区 -->
+<main class="right">
+  <!-- 基本信息 -->
+  <section class="section">
+    <h3>基本信息</h3>
+    <div class="row">
+      <label>姓名</label><input id="p-name" placeholder="请输入姓名">
+    </div>
+    <div class="row">
+      <label>性别</label>
+      <select id="p-gender"><option value="男">男</option><option value="女">女</option></select>
+    </div>
+    <div class="row">
+      <label>年龄</label><input id="p-age" type="number" placeholder="岁">
+    </div>
+    <div class="row">
+      <label>住院号</label><input id="p-hospno" placeholder="例 00212345">
+    </div>
+    <div class="row">
+      <label>床号</label><input id="p-bed" placeholder="例 12A">
+    </div>
+  </section>
+
+  <!-- 病历 -->
+  <section class="section">
+    <h3>初步诊断</h3>
+    <textarea id="p-diag" style="width:100%;height:60px;border:1px solid #d9d9d9;border-radius:4px;padding:6px" placeholder="请输入诊断"></textarea>
+  </section>
+
+  <!-- 医嘱 -->
+  <section class="section">
+    <h3>医嘱</h3>
+    <div class="row">
+      <label>药品</label><input id="o-drug" placeholder="药品名 剂量 频次">
+    </div>
+    <div class="row">
+      <label>检验</label><input id="o-lab" placeholder="例 血常规+CRP">
+    </div>
+    <div class="row">
+      <label>检查</label><input id="o-exam" placeholder="例 胸部CT">
+    </div>
+  </section>
+
+  <button class="save-btn" onclick="savePat()">保存</button>
+</main>
+
+<script>
+/* ------------ 数据层 ------------ */
+const STORE_KEY = 'doctor_patients';
+let patients = JSON.parse(localStorage.getItem(STORE_KEY)) || [];
+let currentId = null;   // 当前正在编辑的患者ID
+
+/* 初始化：渲染列表 + 默认选中第一个 */
+function init(){
+  renderList();
+  if(patients.length) selectPat(patients[0].id);
+  else addNewPat();
+}
+init();
+
+/* 新增患者 */
+function addNewPat(){
+  const id = Date.now().toString();
+  patients.unshift({id, name:'新患者', gender:'男', age:'', hospno:'', bed:'', diag:'', drug:'', lab:'', exam:''});
+  localStorage.setItem(STORE_KEY, JSON.stringify(patients));
+  renderList();
+  selectPat(id);
+}
+
+/* 选中患者并回填表单 */
+function selectPat(id){
+  currentId = id;
+  const p = patients.find(v=>v.id===id);
+  if(!p) return;
+  document.getElementById('p-name').value  = p.name;
+  document.getElementById('p-gender').value= p.gender;
+  document.getElementById('p-age').value   = p.age;
+  document.getElementById('p-hospno').value= p.hospno;
+  document.getElementById('p-bed').value   = p.bed;
+  document.getElementById('p-diag').value  = p.diag;
+  document.getElementById('o-drug').value  = p.drug;
+  document.getElementById('o-lab').value   = p.lab;
+  document.getElementById('o-exam').value  = p.exam;
+  /* 高亮当前行 */
+  document.querySelectorAll('.pat-item').forEach(el=>el.classList.remove('active'));
+  document.querySelector(`[data-id="${id}"]`)?.classList.add('active');
+}
+
+/* 保存（先写本地） */
+function savePat(){
+  const p = patients.find(v=>v.id===currentId);
+  if(!p) return;
+  p.name   = document.getElementById('p-name').value.trim();
+  p.gender = document.getElementById('p-gender').value;
+  p.age    = document.getElementById('p-age').value.trim();
+  p.hospno = document.getElementById('p-hospno').value.trim();
+  p.bed    = document.getElementById('p-bed').value.trim();
+  p.diag   = document.getElementById('p-diag').value.trim();
+  p.drug   = document.getElementById('o-drug').value.trim();
+  p.lab    = document.getElementById('o-lab').value.trim();
+  p.exam   = document.getElementById('o-exam').value.trim();
+  localStorage.setItem(STORE_KEY, JSON.stringify(patients));
+  renderList();
+  alert('已保存！');
+}
+
+/* 渲染左侧列表 */
+function renderList(){
+  const box = document.getElementById('patList');
+  box.innerHTML = patients.map(p=>`
+    <div class="pat-item ${p.id===currentId?'active':''}" data-id="${p.id}" onclick="selectPat('${p.id}')">
+      <div style="font-size:13px;font-weight:bold">${p.name} (${p.gender} ${p.age}岁)</div>
+      <div style="font-size:12px;color:#666">${p.bed} | ${p.hospno}</div>
+    </div>`).join('');
+}
+</script>
+</body>
+</html>
+

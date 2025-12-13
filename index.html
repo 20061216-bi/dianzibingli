@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>电子病历系统 - 智能医疗管理平台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-bg: #0a0e27;
+            --secondary-bg: #1a1f3a;
+            --accent-patient: #06b6d4;
+            --accent-nurse: #a855f7;
+            --accent-doctor: #10b981;
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            line-height: 1.6;
+        }
+
+        header {
+            background: rgba(26, 31, 58, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #06b6d4, #10b981);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .logo-text h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #ffffff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo-text p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 2rem;
+        }
+
+        nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: var(--text-primary);
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        .hero-section {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .hero-section h2 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #ffffff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-section p {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .portal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .portal-card {
+            background: rgba(26, 31, 58, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 3rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .portal-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at center, rgba(255, 255, 255, 0.05), transparent);
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .portal-card:hover::before {
+            opacity: 1;
+        }
+
+        .portal-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .portal-card.patient {
+            border-color: var(--accent-patient);
+        }
+
+        .portal-card.patient:hover {
+            background: rgba(6, 182, 212, 0.1);
+            box-shadow: 0 20px 40px rgba(6, 182, 212, 0.3);
+        }
+
+        .portal-card.nurse {
+            border-color: var(--accent-nurse);
+        }
+
+        .portal-card.nurse:hover {
+            background: rgba(168, 85, 247, 0.1);
+            box-shadow: 0 20px 40px rgba(168, 85, 247, 0.3);
+        }
+
+        .portal-card.doctor {
+            border-color: var(--accent-doctor);
+        }
+
+        .portal-card.doctor:hover {
+            background: rgba(16, 185, 129, 0.1);
+            box-shadow: 0 20px 40px rgba(16, 185, 129, 0.3);
+        }
+
+        .portal-icon {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 1.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            transition: transform 0.4s;
+        }
+
+        .portal-card:hover .portal-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .portal-card.patient .portal-icon {
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(6, 182, 212, 0.05));
+            border: 3px solid var(--accent-patient);
+        }
+
+        .portal-card.nurse .portal-icon {
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(168, 85, 247, 0.05));
+            border: 3px solid var(--accent-nurse);
+        }
+
+        .portal-card.doctor .portal-icon {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.05));
+            border: 3px solid var(--accent-doctor);
+        }
+
+        .portal-card h3 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .portal-card.patient h3 {
+            color: var(--accent-patient);
+        }
+
+        .portal-card.nurse h3 {
+            color: var(--accent-nurse);
+        }
+
+        .portal-card.doctor h3 {
+            color: var(--accent-doctor);
+        }
+
+        .portal-card p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .portal-button {
+            display: inline-block;
+            padding: 0.875rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+            border: 2px solid;
+        }
+
+        .portal-card.patient .portal-button {
+            color: var(--accent-patient);
+            border-color: var(--accent-patient);
+        }
+
+        .portal-card.patient .portal-button:hover {
+            background: var(--accent-patient);
+            color: white;
+        }
+
+        .portal-card.nurse .portal-button {
+            color: var(--accent-nurse);
+            border-color: var(--accent-nurse);
+        }
+
+        .portal-card.nurse .portal-button:hover {
+            background: var(--accent-nurse);
+            color: white;
+        }
+
+        .portal-card.doctor .portal-button {
+            color: var(--accent-doctor);
+            border-color: var(--accent-doctor);
+        }
+
+        .portal-card.doctor .portal-button:hover {
+            background: var(--accent-doctor);
+            color: white;
+        }
+
+        .features {
+            margin-top: 4rem;
+            padding: 3rem;
+            background: rgba(26, 31, 58, 0.4);
+            border-radius: 24px;
+            backdrop-filter: blur(10px);
+        }
+
+        .features h3 {
+            text-align: center;
+            font-size: 1.75rem;
+            margin-bottom: 2rem;
+            color: var(--text-primary);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-item {
+            text-align: center;
+            padding: 1.5rem;
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-item h4 {
+            font-size: 1.125rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .feature-item p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        footer {
+            background: rgba(10, 14, 39, 0.8);
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            nav ul {
+                flex-direction: column;
+                gap: 0.5rem;
+                text-align: center;
+            }
+
+            .hero-section h2 {
+                font-size: 2rem;
+            }
+
+            .portal-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">⚕️</div>
+                <div class="logo-text">
+                    <h1>电子病历系统</h1>
+                    <p>智能医疗管理平台</p>
+                </div>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="#home">首页</a></li>
+                    <li><a href="#about">关于我们</a></li>
+                    <li><a href="#support">技术支持</a></li>
+                    <li><a href="#contact">联系我们</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <section class="hero-section">
+                <h2>欢迎使用电子病历系统</h2>
+                <p>为患者、医护人员提供便捷、安全、高效的医疗健康管理服务</p>
+            </section>
+
+            <div class="portal-grid">
+                <div class="portal-card patient" onclick="handlePortalClick('patient')">
+                    <div class="portal-icon">👤</div>
+                    <h3>患者端</h3>
+                    <p>查看个人健康档案、预约挂号、在线咨询、查询检查报告</p>
+                    <a href="sign pages.html" class="portal-button">进入患者端</a>
+                </div>
+
+                <div class="portal-card nurse" onclick="handlePortalClick('nurse')">
+                    <div class="portal-icon">💉</div>
+                    <h3>护士端</h3>
+                    <p>护理记录、医嘱执行、患者监护、病情观察记录</p>
+                    <a href="sign pages.html" class="portal-button">进入护士端</a>
+                </div>
+
+                <div class="portal-card doctor" onclick="handlePortalClick('doctor')">
+                    <div class="portal-icon">🩺</div>
+                    <h3>医生端</h3>
+                    <p>电子病历管理、诊断开方、检查申请、医嘱下达</p>
+                    <a href="sign pages.html" class="portal-button">进入医生端</a>
+                </div>
+            </div>
+
+            <section class="features">
+                <h3>系统特色功能</h3>
+                <div class="features-grid">
+                    <div class="feature-item">
+                        <div class="feature-icon">🔒</div>
+                        <h4>安全可靠</h4>
+                        <p>采用医疗级数据加密，保障患者隐私安全</p>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">📱</div>
+                        <h4>移动便捷</h4>
+                        <p>支持多端访问，随时随地管理健康信息</p>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">⚡</div>
+                        <h4>高效协同</h4>
+                        <p>医护患三方信息互通，提升诊疗效率</p>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">📊</div>
+                        <h4>智能分析</h4>
+                        <p>AI辅助诊断，提供专业健康建议</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 电子病历系统 | 版权所有 | 技术支持热线：400-XXX-XXXX</p>
+    </footer>
+
+    <script>
+        // 更新跳转逻辑
+        function handlePortalClick(portal) {
+            console.log('[v0] 用户点击了 ' + portal + ' 入口');
+            // 直接跳转到登录页面，登录后根据角色跳转
+            window.location.href = 'sign pages.html';
+        }
+
+        // 添加平滑滚动效果
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

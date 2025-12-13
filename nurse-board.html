@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"/>
+  <title>护士站看板</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Helvetica,Arial,"PingFang SC","Microsoft YaHei",sans-serif}
+    body{background:#f2f6fa;color:#333;display:flex;flex-direction:column;height:100vh}
+    header{display:flex;align-items:center;justify-content:space-between;background:#fff;padding:10px 20px;box-shadow:0 2px 4px rgba(0,0,0,.05)}
+    .logo{font-size:20px;font-weight:700;color:#1890ff}
+    .time{font-size:18px;color:#666}
+    .stats{display:flex;gap:20px;background:#fff;margin:10px 20px;padding:10px 15px;border-radius:6px;box-shadow:0 2px 4px rgba(0,0,0,.05)}
+    .stat{text-align:center}
+    .stat .num{font-size:28px;font-weight:700}
+    .stat .lab{font-size:14px;color:#999}
+    .beds{flex:1;display:flex;flex-wrap:wrap;gap:12px;padding:0 20px 20px;overflow-y:auto}
+    .card{width:calc(16.666% - 10px);background:#fff;border-radius:6px;box-shadow:0 2px 6px rgba(0,0,0,.08);cursor:pointer;transition:.2s}
+    .card:hover{transform:translateY(-2px)}
+    .card.empty{background:#e8f0ff;color:#8590a6}
+    .card.critical{background:#fff1f0;border:1px solid #ff4d4f}
+    .card.new{background:#f6ffed;border:1px solid #b7eb8f}
+    .topbar{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;font-size:13px}
+    .bedno{font-weight:700;font-size:16px}
+    .gender-age{font-size:12px;color:#666}
+    .body{padding:0 10px 8px}
+    .name{font-size:15px;font-weight:700;margin-bottom:4px}
+    .doc{font-size:12px;color:#666}
+    .tags{display:flex;gap:4px;margin-top:6px}
+    .tag{padding:2px 5px;border-radius:3px;font-size:11px}
+    .tag.new{background:#52c41a;color:#fff}
+    .tag.critical{background:#ff4d4f;color:#fff}
+    .tag.allergy{background:#faad14;color:#fff}
+    .tag.owe{background:#f5222d;color:#fff}
+    /* 弹窗 */
+    .modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center}
+    .modal.show{display:flex}
+    .modal-content{background:#fff;width:400px;border-radius:8px;padding:20px}
+    .modal-header{display:flex;justify-content:space-between;align-items:center}
+    .close{font-size:20px;cursor:pointer}
+    .modal-body{margin-top:10px;font-size:14px;line-height:1.8}
+  </style>
+</head>
+<body>
+<header>
+  <div class="logo">床位信息</div>
+  <div class="time" id="clock"></div>
+</header>
+
+<section class="stats">
+  <div class="stat"><div class="num" id="s-all">37</div><div class="lab">全部</div></div>
+  <div class="stat"><div class="num" id="s-new">5</div><div class="lab">新入</div></div>
+  <div class="stat"><div class="num" id="s-critical">1</div><div class="lab">危重</div></div>
+  <div class="stat"><div class="num" id="s-empty">6</div><div class="lab">空床</div></div>
+  <div class="stat"><div class="num" id="s-oper">0</div><div class="lab">今日手术</div></div>
+  <div class="stat"><div class="num" id="s-allergy">3</div><div class="lab">过敏</div></div>
+  <div class="stat"><div class="num" id="s-owe">2</div><div class="lab">欠费</div></div>
+</section>
+
+<main class="beds" id="beds"></main>
+
+<!-- 弹窗 -->
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <span id="m-title"></span>
+      <span class="close" onclick="closeModal()">&times;</span>
+    </div>
+    <div class="modal-body" id="m-body"></div>
+  </div>
+</div>
+
+<script>
+/* -------- 模拟数据 -------- */
+const beds = [];
+for(let i=1;i<=43;i++){
+  const status = Math.random()>0.86?'empty':      // 空床
+                 Math.random()>0.6?'normal':'patient';
+  if(status==='empty'){
+    beds.push({bedno:String(i).padStart(3,'0'),status:'empty'})
+  }else{
+    const name = ['张','李','王','赵','钱'][Math.floor(Math.random()*5)] + '**';
+    const gender = Math.random()>0.5?'男':'女';
+    const age = Math.floor(Math.random()*70+18);
+    const doctor = ['孙十工','王玉红','王秀','张艳红','孙叶虹'][Math.floor(Math.random()*5)];
+    const tags = [];
+    if(Math.random()>0.7) tags.push('new');
+    if(Math.random()>0.9) tags.push('critical');
+    if(Math.random()>0.85) tags.push('allergy');
+    if(Math.random()>0.88) tags.push('owe');
+    beds.push({bedno:String(i).padStart(3,'0'),status:'patient',name,gender,age,doctor,tags,
+               adt:'2025-12-12',diag:'慢性阻塞性肺病伴急性加重',phone:'138****1234',level:'一级护理'})
+  }
+}
+
+/* -------- 渲染床位卡片 -------- */
+function renderBeds(){
+  const box = document.getElementById('beds');
+  box.innerHTML = '';
+  beds.forEach(b=>{
+    const card = document.createElement('div');
+    card.className = 'card';
+    if(b.status==='empty') card.classList.add('empty');
+    else{
+      if(b.tags.includes('critical')) card.classList.add('critical');
+      if(b.tags.includes('new')) card.classList.add('new');
+    }
+    card.innerHTML = `
+      <div class="topbar">
+        <span class="bedno">${b.bedno}</span>
+        <span class="gender-age">${b.status==='empty'?'空床':b.gender+' '+b.age+'岁'}</span>
+      </div>
+      ${b.status==='patient'?`
+      <div class="body">
+        <div class="name">${b.name}</div>
+        <div class="doc">医生：${b.doctor}</div>
+        <div class="tags">
+          ${b.tags.includes('new')?'<span class="tag new">新</span>':''}
+          ${b.tags.includes('critical')?'<span class="tag critical">危重</span>':''}
+          ${b.tags.includes('allergy')?'<span class="tag allergy">过敏</span>':''}
+          ${b.tags.includes('owe')?'<span class="tag owe">欠费</span>':''}
+        </div>
+      </div>`:''}`;
+    if(b.status==='patient') card.onclick = ()=>showDetail(b);
+    box.appendChild(card);
+  });
+  countStats();
+}
+renderBeds();
+
+/* -------- 统计 -------- */
+function countStats(){
+  const stats = {
+    all: beds.filter(b=>b.status==='patient').length,
+    new: 0, critical: 0, empty: 0, oper: 0, allergy: 0, owe: 0
+  };
+  beds.forEach(b=>{
+    if(b.status==='empty') stats.empty++;
+    if(b.status==='patient'){
+      if(b.tags.includes('new')) stats.new++;
+      if(b.tags.includes('critical')) stats.critical++;
+      if(b.tags.includes('allergy')) stats.allergy++;
+      if(b.tags.includes('owe')) stats.owe++;
+    }
+  });
+  ['all','new','critical','empty','oper','allergy','owe']
+    .forEach(k=>document.getElementById('s-'+k).textContent=stats[k]||0);
+}
+
+/* -------- 详情弹窗 -------- */
+function showDetail(b){
+  document.getElementById('m-title').textContent = `床位 ${b.bedno} 详情`;
+  document.getElementById('m-body').innerHTML = `
+    姓名：${b.name}<br>
+    性别：${b.gender}<br>
+    年龄：${b.age} 岁<br>
+    住院号：${'002'+String(Math.floor(Math.random()*1e5)).padStart(5,'0')}<br>
+    诊断：${b.diag}<br>
+    入区时间：${b.adt}<br>
+    护理等级：${b.level}<br>
+    联系电话：${b.phone}<br>
+    主治医生：${b.doctor}
+  `;
+  document.getElementById('modal').classList.add('show');
+}
+function closeModal(){
+  document.getElementById('modal').classList.remove('show');
+}
+
+/* -------- 时钟 -------- */
+function tick(){
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.toLocaleDateString('zh-CN') + ' ' + now.toLocaleTimeString('zh-CN');
+}
+tick(); setInterval(tick,1000);
+</script>
+</body>
+</html>
+

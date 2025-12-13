@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"/>
+  <title>患者门户-网页版</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:PingFang SC,Microsoft YaHei}
+    body{background:#f5f7fa;color:#333;display:flex;flex-direction:column;align-items:center;padding:20px}
+    .box{width:100%;max-width:600px;background:#fff;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.08);padding:20px}
+    .search{display:flex;gap:10px;margin-bottom:20px}
+    .search input{flex:1;padding:8px 12px;border:1px solid #d9d9d9;border-radius:4px}
+    .search button{padding:8px 16px;background:#1890ff;color:#fff;border:none;border-radius:4px;cursor:pointer}
+    .tabs{display:flex;border-bottom:1px solid #e8e8e8;margin-bottom:15px}
+    .tab{padding:8px 16px;cursor:pointer;font-size:14px}
+    .tab.active{color:#1890ff;border-bottom:2px solid #1890ff}
+    .content{font-size:14px;line-height:1.8}
+    .content .row{display:flex;margin-bottom:6px}
+    .content .label{width:100px;color:#666}
+    .content .value{flex:1;color:#333}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th,td{padding:6px 8px;border:1px solid #e8e8e8;text-align:left}
+    th{background:#fafafa}
+  </style>
+</head>
+<body>
+<div class="box">
+  <!-- 查询 -->
+  <div class="search">
+    <input id="hospno" placeholder="住院号 例 00212345"/>
+    <input id="birth" placeholder="生日后4位 例 1228"/>
+    <button onclick="query()">查询</button>
+  </div>
+
+  <!-- 页签 -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab(0)">基本信息</div>
+    <div class="tab" onclick="switchTab(1)">检验检查</div>
+    <div class="tab" onclick="switchTab(2)">住院日清单</div>
+  </div>
+
+  <!-- 内容区 -->
+  <div class="content" id="content"></div>
+</div>
+
+<script>
+/* -------- Mock 数据（后续换 fetch） -------- */
+const mockPatient = {
+  name: '张**',
+  gender: '男',
+  age: 65,
+  bed: '12A',
+  hospno: '00212345',
+  diag: '慢性阻塞性肺病伴急性加重',
+  adt: '2025-12-12',
+  doctor: '孙十工'
+};
+const mockLab = [
+  {item: '血常规', result: 'WBC 12.3×10⁹/L ↑', date: '2025-12-13'},
+  {item: 'CRP', result: '25.6 mg/L ↑', date: '2025-12-13'}
+];
+const mockExam = [
+  {item: '胸部CT', result: '双肺纹理增粗', date: '2025-12-12'}
+];
+const mockBill = [
+  {date: '2025-12-12', name: '床位费', spec: '12A', amount: 45},
+  {date: '2025-12-12', name: '氯化钠注射液', spec: '100ml', amount: 12.5},
+  {date: '2025-12-13', name: '血常规', spec: '次', amount: 20}
+];
+
+/* 查询 */
+function query(){
+  const hospno = document.getElementById('hospno').value.trim();
+  const birth = document.getElementById('birth').value.trim();
+  if(!hospno || !birth){ alert('请输入住院号和生日后4位'); return; }
+  // 真实环境：fetch(`/api/patient?hospno=${hospno}&birth=${birth}`)
+  // 本地 Mock：直接渲染
+  renderBasic();
+  switchTab(0);
+}
+
+/* 切换页签 */
+function switchTab(idx){
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',i===idx));
+  const content = document.getElementById('content');
+  if(idx===0) renderBasic();
+  if(idx===1) renderLabExam();
+  if(idx===2) renderBill();
+}
+
+/* 基本信息 */
+function renderBasic(){
+  const p = mockPatient;
+  document.getElementById('content').innerHTML = `
+    <div class="row"><div class="label">姓名</div><div class="value">${p.name}</div></div>
+    <div class="row"><div class="label">性别</div><div class="value">${p.gender}</div></div>
+    <div class="row"><div class="label">年龄</div><div class="value">${p.age}岁</div></div>
+    <div class="row"><div class="label">住院号</div><div class="value">${p.hospno}</div></div>
+    <div class="row"><div class="label">床号</div><div class="value">${p.bed}</div></div>
+    <div class="row"><div class="label">诊断</div><div class="value">${p.diag}</div></div>
+    <div class="row"><div class="label">入区时间</div><div class="value">${p.adt}</div></div>
+    <div class="row"><div class="label">主治医生</div><div class="value">${p.doctor}</div></div>
+  `;
+}
+
+/* 检验检查 */
+function renderLabExam(){
+  const labRows = mockLab.map(i=>`<tr><td>${i.item}</td><td>${i.result}</td><td>${i.date}</td></tr>`).join('');
+  const examRows = mockExam.map(i=>`<tr><td>${i.item}</td><td>${i.result}</td><td>${i.date}</td></tr>`).join('');
+  document.getElementById('content').innerHTML = `
+    <div style="margin-bottom:15px;font-weight:bold">检验</div>
+    <table><thead><tr><th>项目</th><th>结果</th><th>日期</th></tr></thead><tbody>${labRows}</tbody></table>
+    <div style="margin:15px 0;font-weight:bold">检查</div>
+    <table><thead><tr><th>项目</th><th>结果</th><th>日期</th></tr></thead><tbody>${examRows}</tbody></table>
+  `;
+}
+
+/* 住院日清单 */
+function renderBill(){
+  const rows = mockBill.map(b=>`<tr><td>${b.date}</td><td>${b.name}</td><td>${b.spec}</td><td>¥${b.amount}</td></tr>`).join('');
+  document.getElementById('content').innerHTML = `
+    <table><thead><tr><th>日期</th><th>名称</th><th>规格</th><th>金额</th></tr></thead><tbody>${rows}</tbody></table>
+    <div style="text-align:right;margin-top:10px">总计：¥${mockBill.reduce((s,i)=>s+i.amount,0).toFixed(2)}</div>
+  `;
+}
+</script>
+</body>
+</html>

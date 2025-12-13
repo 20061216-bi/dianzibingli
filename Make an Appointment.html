@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>预约挂号 - 电子病历系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-bg: #0a0e27;
+            --secondary-bg: #1a1f3a;
+            --accent-color: #06b6d4;
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        header {
+            background: rgba(26, 31, 58, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--accent-color), #0891b2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .logo-text h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+
+        .logo-text p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .back-button {
+            padding: 0.75rem 1.5rem;
+            background: rgba(6, 182, 212, 0.1);
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .back-button:hover {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 1rem;
+            background: rgba(6, 182, 212, 0.1);
+            border-radius: 12px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-title {
+            background: rgba(26, 31, 58, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 2px solid rgba(6, 182, 212, 0.3);
+        }
+
+        .page-title h2 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: var(--accent-color);
+        }
+
+        .page-title p {
+            color: var(--text-secondary);
+        }
+
+        .appointment-container {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 1024px) {
+            .appointment-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .search-section {
+            background: rgba(26, 31, 58, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 2rem;
+            border: 2px solid rgba(6, 182, 212, 0.2);
+            height: fit-content;
+        }
+
+        .search-section h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--accent-color);
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(6, 182, 212, 0.2);
+        }
+
+        .search-box {
+            margin-bottom: 1.5rem;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(10, 14, 39, 0.7);
+            border: 2px solid rgba(6, 182, 212, 0.3);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .filter-options {
+            margin-bottom: 1.5rem;
+        }
+
+        .filter-title {
+            font-size: 1rem;
+            margin-bottom: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .filter-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .filter-tag {
+            padding: 0.5rem 1rem;
+            background: rgba(6, 182, 212, 0.1);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            color: var(--accent-color);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.875rem;
+        }
+
+        .filter-tag:hover, .filter-tag.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .department-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .department-item {
+            background: rgba(10, 14, 39, 0.5);
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid rgba(6, 182, 212, 0.1);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .department-item:hover {
+            border-color: var(--accent-color);
+            transform: translateX(5px);
+        }
+
+        .department-item.active {
+            border-color: var(--accent-color);
+            background: rgba(6, 182, 212, 0.1);
+        }
+
+        .department-name {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .department-desc {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .department-info {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .department-tag {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success-color);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .detail-section {
+            background: rgba(26, 31, 58, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 2rem;
+            border: 2px solid rgba(6, 182, 212, 0.2);
+        }
+
+        .department-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 2px solid rgba(6, 182, 212, 0.2);
+        }
+
+        .department-title h3 {
+            font-size: 1.75rem;
+            color: var(--accent-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .department-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--success-color);
+        }
+
+        .status-text {
+            font-size: 0.875rem;
+            color: var(--success-color);
+        }
+
+        .department-details {
+            margin-bottom: 2rem;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .details-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .detail-card {
+            background: rgba(10, 14, 39, 0.5);
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid rgba(6, 182, 212, 0.1);
+        }
+
+        .detail-card h4 {
+            font-size: 1rem;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+
+        .detail-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .detail-label {
+            color: var(--text-secondary);
+        }
+
+        .detail-value {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .doctors-list {
+            margin-bottom: 2rem;
+        }
+
+        .doctors-list h4 {
+            font-size: 1.25rem;
+            color: var(--accent-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .doctors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        .doctor-card {
+            background: rgba(10, 14, 39, 0.5);
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid rgba(6, 182, 212, 0.1);
+            transition: all 0.3s;
+        }
+
+        .doctor-card:hover {
+            border-color: var(--accent-color);
+            transform: translateY(-5px);
+        }
+
+        .doctor-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .doctor-avatar {
+            width: 60px;
+            height: 60px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .doctor-info h5 {
+            font-size: 1.125rem;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .doctor-title {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .doctor-schedule {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .schedule-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .schedule-time {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .schedule-status {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .status-available {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success-color);
+        }
+
+        .status-limited {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning-color);
+        }
+
+        .status-full {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .appointment-button {
+            width: 100%;
+            padding: 1rem;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.125rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 1rem;
+        }
+
+        .appointment-button:hover {
+            background: #0891b2;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(6, 182, 212, 0.3);
+        }
+
+        .no-department-selected {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 400px;
+            text-align: center;
+        }
+
+        .no-department-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            color: var(--accent-color);
+        }
+
+        .no-department-text {
+            color: var(--text-secondary);
+            font-size: 1.125rem;
+        }
+
+        /* 自定义滚动条 */
+        .department-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .department-list::-webkit-scrollbar-track {
+            background: rgba(10, 14, 39, 0.5);
+            border-radius: 4px;
+        }
+
+        .department-list::-webkit-scrollbar-thumb {
+            background: var(--accent-color);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">📅</div>
+                <div class="logo-text">
+                    <h1>预约挂号</h1>
+                    <p>选择科室与医生</p>
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <a href="patient.html" class="back-button">← 返回患者端</a>
+                <div class="user-info">
+                    <div class="user-avatar">👤</div>
+                    <span class="user-name">张三</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="page-title">
+            <h2>门诊预约</h2>
+            <p>选择科室，查看医生排班并完成预约</p>
+        </section>
+
+        <div class="appointment-container">
+            <!-- 左侧搜索和科室列表 -->
+            <section class="search-section">
+                <h3>科室选择</h3>
+                
+                <div class="search-box">
+                    <input type="text" class="search-input" id="departmentSearch" placeholder="搜索科室名称或关键词...">
+                </div>
+                
+                <div class="filter-options">
+                    <div class="filter-title">快速筛选</div>
+                    <div class="filter-tags">
+                        <span class="filter-tag active" data-filter="all">全部科室</span>
+                        <span class="filter-tag" data-filter="internal">内科</span>
+                        <span class="filter-tag" data-filter="surgery">外科</span>
+                        <span class="filter-tag" data-filter="special">专科</span>
+                        <span class="filter-tag" data-filter="examination">检查科室</span>
+                    </div>
+                </div>
+                
+                <div class="department-list" id="departmentList">
+                    <!-- 科室列表将通过JavaScript动态生成 -->
+                </div>
+            </section>
+            
+            <!-- 右侧科室详情和医生排班 -->
+            <section class="detail-section" id="departmentDetail">
+                <!-- 默认显示内容 -->
+                <div class="no-department-selected">
+                    <div class="no-department-icon">👨‍⚕️</div>
+                    <h3>请选择科室</h3>
+                    <p class="no-department-text">从左侧列表中选择一个科室查看详细信息</p>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        // 科室数据
+        const departments = [
+            {
+                id: 1,
+                name: "心血管内科",
+                description: "诊治心脏及血管疾病",
+                type: "internal",
+                location: "门诊大楼3层A区",
+                contact: "010-12345678",
+                waitTime: "平均等待时间：30分钟",
+                isAvailable: true,
+                doctors: [
+                    { id: 101, name: "王明", title: "主任医师", avatar: "王", schedule: [
+                        { date: "2025-12-15", time: "09:00-12:00", status: "available" },
+                        { date: "2025-12-15", time: "14:00-17:00", status: "limited" },
+                        { date: "2025-12-16", time: "08:30-12:00", status: "available" }
+                    ]},
+                    { id: 102, name: "李静", title: "副主任医师", avatar: "李", schedule: [
+                        { date: "2025-12-15", time: "13:00-16:00", status: "available" },
+                        { date: "2025-12-16", time: "09:00-12:00", status: "full" },
+                        { date: "2025-12-16", time: "14:00-17:00", status: "limited" }
+                    ]}
+                ]
+            },
+            {
+                id: 2,
+                name: "消化内科",
+                description: "诊治消化系统疾病",
+                type: "internal",
+                location: "门诊大楼2层B区",
+                contact: "010-12345679",
+                waitTime: "平均等待时间：25分钟",
+                isAvailable: true,
+                doctors: [
+                    { id: 201, name: "张伟", title: "主任医师", avatar: "张", schedule: [
+                        { date: "2025-12-15", time: "08:00-12:00", status: "available" },
+                        { date: "2025-12-16", time: "08:30-12:00", status: "limited" }
+                    ]}
+                ]
+            },
+            {
+                id: 3,
+                name: "骨科",
+                description: "诊治骨骼、关节疾病",
+                type: "surgery",
+                location: "门诊大楼4层C区",
+                contact: "010-12345680",
+                waitTime: "平均等待时间：45分钟",
+                isAvailable: true,
+                doctors: [
+                    { id: 301, name: "赵强", title: "主任医师", avatar: "赵", schedule: [
+                        { date: "2025-12-15", time: "09:00-12:00", status: "limited" },
+                        { date: "2025-12-15", time: "14:00-17:00", status: "full" },
+                        { date: "2025-12-17", time: "08:30-12:00", status: "available" }
+                    ]},
+                    { id: 302, name: "刘芳", title: "副主任医师", avatar: "刘", schedule: [
+                        { date: "2025-12-15", time: "13:00-16:00", status: "available" },
+                        { date: "2025-12-16", time: "09:00-12:00", status: "available" }
+                    ]}
+                ]
+            },
+            {
+                id: 4,
+                name: "皮肤科",
+                description: "诊治皮肤疾病及美容",
+                type: "special",
+                location: "门诊大楼1层D区",
+                contact: "010-12345681",
+                waitTime: "平均等待时间：20分钟",
+                isAvailable: true,
+                doctors: [
+                    { id: 401, name: "陈琳", title: "主任医师", avatar: "陈", schedule: [
+                        { date: "2025-12-15", time: "08:30-12:00", status: "available" },
+                        { date: "2025-12-16", time: "09:00-12:00", status: "available" }
+                    ]}
+                ]
+            },
+            {
+                id: 5,
+                name: "眼科",
+                description: "诊治眼部疾病",
+                type: "special",
+                location: "门诊大楼2层E区",
+                contact: "010-12345682",
+                waitTime: "平均等待时间：35分钟",
+                isAvailable: true,
+                doctors: [
+                    { id: 501, name: "周涛", title: "主任医师", avatar: "周", schedule: [
+                        { date: "2025-12-15", time: "09:00-12:00", status: "limited" },
+                        { date: "2025-12-16", time: "08:30-12:00", status: "available" }
+                    ]}
+                ]
+            },
+            {
+                id: 6,
+                name: "放射科",
+                description: "进行各类影像检查",
+                type: "examination",
+                location: "检查大楼1层",
+                contact: "010-12345683",
+                waitTime: "平均等待时间：15分钟",
+                isAvailable: true,
+                doctors: [
+                    { id: 601, name: "吴刚", title: "主任医师", avatar: "吴", schedule: [
+                        { date: "2025-12-15", time: "08:00-17:00", status: "available" },
+                        { date: "2025-12-16", time: "08:00-17:00", status: "available" }
+                    ]}
+                ]
+            },
+            {
+                id: 7,
+                name: "儿科",
+                description: "诊治儿童疾病",
+                type: "special",
+                location: "门诊大楼3层F区",
+                contact: "010-12345684",
+                waitTime: "平均等待时间：40分钟",
+                isAvailable: true,
+                doctors: [
+                    { id: 701, name: "孙悦", title: "主任医师", avatar: "孙", schedule: [
+                        { date: "2025-12-15", time: "08:30-12:00", status: "full" },
+                        { date: "2025-12-16", time: "09:00-12:00", status: "limited" }
+                    ]}
+                ]
+            }
+        ];
+
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            renderDepartmentList(departments);
+            setupEventListeners();
+        });
+
+        // 渲染科室列表
+        function renderDepartmentList(departmentsToRender) {
+            const departmentList = document.getElementById('departmentList');
+            departmentList.innerHTML = '';
+            
+            if (departmentsToRender.length === 0) {
+                departmentList.innerHTML = '<div class="department-item"><div class="department-name">未找到相关科室</div></div>';
+                return;
+            }
+            
+            departmentsToRender.forEach(dept => {
+                const deptItem = document.createElement('div');
+                deptItem.className = 'department-item';
+                deptItem.dataset.id = dept.id;
+                
+                deptItem.innerHTML = `
+                    <div class="department-name">${dept.name}</div>
+                    <div class="department-desc">${dept.description}</div>
+                    <div class="department-info">
+                        <span>${dept.location}</span>
+                        <span class="department-tag">${dept.type === 'internal' ? '内科' : 
+                                                     dept.type === 'surgery' ? '外科' : 
+                                                     dept.type === 'special' ? '专科' : '检查科室'}</span>
+                    </div>
+                `;
+                
+                departmentList.appendChild(deptItem);
+            });
+            
+            // 默认选中第一个科室
+            if (departmentsToRender.length > 0) {
+                const firstDeptItem = departmentList.querySelector('.department-item');
+                firstDeptItem.classList.add('active');
+                renderDepartmentDetail(departmentsToRender[0]);
+            }
+        }
+
+        // 渲染科室详情
+        function renderDepartmentDetail(department) {
+            const detailSection = document.getElementById('departmentDetail');
+            
+            let doctorsHTML = '';
+            department.doctors.forEach(doctor => {
+                let scheduleHTML = '';
+                doctor.schedule.forEach(schedule => {
+                    let statusClass = '';
+                    let statusText = '';
+                    
+                    if (schedule.status === 'available') {
+                        statusClass = 'status-available';
+                        statusText = '可预约';
+                    } else if (schedule.status === 'limited') {
+                        statusClass = 'status-limited';
+                        statusText = '少量余号';
+                    } else {
+                        statusClass = 'status-full';
+                        statusText = '已满';
+                    }
+                    
+                    scheduleHTML += `
+                        <div class="schedule-item">
+                            <span class="schedule-time">${schedule.date} ${schedule.time}</span>
+                            <span class="schedule-status ${statusClass}">${statusText}</span>
+                        </div>
+                    `;
+                });
+                
+                doctorsHTML += `
+                    <div class="doctor-card">
+                        <div class="doctor-header">
+                            <div class="doctor-avatar">${doctor.avatar}</div>
+                            <div class="doctor-info">
+                                <h5>${doctor.name}</h5>
+                                <div class="doctor-title">${doctor.title}</div>
+                            </div>
+                        </div>
+                        <div class="doctor-schedule">
+                            ${scheduleHTML}
+                        </div>
+                        <button class="appointment-button" data-doctor-id="${doctor.id}">预约${doctor.name}医生</button>
+                    </div>
+                `;
+            });
+            
+            const typeText = department.type === 'internal' ? '内科' : 
+                           department.type === 'surgery' ? '外科' : 
+                           department.type === 'special' ? '专科' : '检查科室';
+            
+            detailSection.innerHTML = `
+                <div class="department-header">
+                    <div class="department-title">
+                        <h3>${department.name}</h3>
+                        <p>${department.description}</p>
+                    </div>
+                    <div class="department-status">
+                        <div class="status-indicator"></div>
+                        <span class="status-text">可预约</span>
+                    </div>
+                </div>
+                
+                <div class="department-details">
+                    <div class="details-grid">
+                        <div class="detail-card">
+                            <h4>科室信息</h4>
+                            <div class="detail-list">
+                                <div class="detail-item">
+                                    <span class="detail-label">科室类型</span>
+                                    <span class="detail-value">${typeText}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">位置</span>
+                                    <span class="detail-value">${department.location}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">联系电话</span>
+                                    <span class="detail-value">${department.contact}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-card">
+                            <h4>就诊信息</h4>
+                            <div class="detail-list">
+                                <div class="detail-item">
+                                    <span class="detail-label">平均等待时间</span>
+                                    <span class="detail-value">${department.waitTime}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">门诊时间</span>
+                                    <span class="detail-value">周一至周五 8:00-17:00</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">周末门诊</span>
+                                    <span class="detail-value">周六上午 8:00-12:00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="doctors-list">
+                    <h4>医生排班</h4>
+                    <div class="doctors-grid">
+                        ${doctorsHTML}
+                    </div>
+                </div>
+            `;
+            
+            // 添加预约按钮事件监听
+            const appointmentButtons = detailSection.querySelectorAll('.appointment-button');
+            appointmentButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const doctorId = this.dataset.doctorId;
+                    const doctor = department.doctors.find(d => d.id == doctorId);
+                    alert(`您已成功预约 ${doctor.name} 医生\n科室：${department.name}\n请按时前往就诊`);
+                });
+            });
+        }
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 搜索功能
+            const searchInput = document.getElementById('departmentSearch');
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase().trim();
+                filterDepartments(searchTerm);
+            });
+            
+            // 筛选标签
+            const filterTags = document.querySelectorAll('.filter-tag');
+            filterTags.forEach(tag => {
+                tag.addEventListener('click', function() {
+                    // 移除其他标签的active状态
+                    filterTags.forEach(t => t.classList.remove('active'));
+                    // 添加当前标签的active状态
+                    this.classList.add('active');
+                    
+                    const filter = this.dataset.filter;
+                    filterDepartmentsByType(filter);
+                });
+            });
+            
+            // 科室列表点击事件
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.department-item')) {
+                    const deptItem = e.target.closest('.department-item');
+                    const deptId = parseInt(deptItem.dataset.id);
+                    
+                    // 移除其他科室的active状态
+                    document.querySelectorAll('.department-item').forEach(item => {
+                        item.classList.remove('active');
+                    });
+                    
+                    // 添加当前科室的active状态
+                    deptItem.classList.add('active');
+                    
+                    // 显示科室详情
+                    const selectedDept = departments.find(dept => dept.id === deptId);
+                    renderDepartmentDetail(selectedDept);
+                }
+            });
+        }
+
+        // 搜索过滤科室
+        function filterDepartments(searchTerm) {
+            let filteredDepartments = departments;
+            
+            if (searchTerm) {
+                filteredDepartments = departments.filter(dept => 
+                    dept.name.toLowerCase().includes(searchTerm) || 
+                    dept.description.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            // 检查当前筛选标签
+            const activeFilter = document.querySelector('.filter-tag.active').dataset.filter;
+            if (activeFilter !== 'all') {
+                filteredDepartments = filteredDepartments.filter(dept => dept.type === activeFilter);
+            }
+            
+            renderDepartmentList(filteredDepartments);
+        }
+
+        // 按类型筛选科室
+        function filterDepartmentsByType(filterType) {
+            const searchTerm = document.getElementById('departmentSearch').value.toLowerCase().trim();
+            
+            let filteredDepartments = departments;
+            
+            if (filterType !== 'all') {
+                filteredDepartments = departments.filter(dept => dept.type === filterType);
+            }
+            
+            if (searchTerm) {
+                filteredDepartments = filteredDepartments.filter(dept => 
+                    dept.name.toLowerCase().includes(searchTerm) || 
+                    dept.description.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            renderDepartmentList(filteredDepartments);
+        }
+    </script>
+</body>
+</html>

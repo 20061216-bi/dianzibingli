@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>患者端 - 电子病历系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-bg: #0a0e27;
+            --secondary-bg: #1a1f3a;
+            --accent-color: #06b6d4;
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        header {
+            background: rgba(26, 31, 58, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--accent-color), #0891b2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .logo-text h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+
+        .logo-text p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .back-button {
+            padding: 0.75rem 1.5rem;
+            background: rgba(6, 182, 212, 0.1);
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .back-button:hover {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 1rem;
+            background: rgba(6, 182, 212, 0.1);
+            border-radius: 12px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .welcome-section {
+            background: rgba(26, 31, 58, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 2px solid rgba(6, 182, 212, 0.3);
+        }
+
+        .welcome-section h2 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: var(--accent-color);
+        }
+
+        .welcome-section p {
+            color: var(--text-secondary);
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(26, 31, 58, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 2px solid rgba(6, 182, 212, 0.2);
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            border-color: var(--accent-color);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(6, 182, 212, 0.2);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(6, 182, 212, 0.1);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .stat-card p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .content-section {
+            background: rgba(26, 31, 58, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 2px solid rgba(6, 182, 212, 0.2);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(6, 182, 212, 0.2);
+        }
+
+        .section-header h3 {
+            font-size: 1.5rem;
+            color: var(--accent-color);
+        }
+
+        .view-all-btn {
+            padding: 0.5rem 1rem;
+            background: rgba(6, 182, 212, 0.1);
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: all 0.3s;
+        }
+
+        .view-all-btn:hover {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .record-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .record-item {
+            background: rgba(10, 14, 39, 0.5);
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid rgba(6, 182, 212, 0.1);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .record-item:hover {
+            border-color: var(--accent-color);
+            transform: translateX(5px);
+        }
+
+        .record-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .record-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .record-date {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .record-content {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .record-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: rgba(6, 182, 212, 0.2);
+            color: var(--accent-color);
+            border-radius: 6px;
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .action-button {
+            padding: 1.5rem;
+            background: rgba(6, 182, 212, 0.1);
+            border: 2px solid var(--accent-color);
+            border-radius: 16px;
+            color: var(--text-primary);
+            text-decoration: none;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .action-button:hover {
+            background: var(--accent-color);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(6, 182, 212, 0.3);
+        }
+
+        .action-button-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .action-button-text {
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-buttons {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .quick-actions {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">👤</div>
+                <div class="logo-text">
+                    <h1>患者端</h1>
+                    <p>个人健康管理</p>
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <a href="index.html" class="back-button">← 返回首页</a>
+                <div class="user-info">
+                    <div class="user-avatar">👤</div>
+                    <span class="user-name">张三</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="welcome-section">
+            <h2>您好，张三</h2>
+        </section>
+
+        <div class="dashboard-grid">            
+            <div class="stat-card">
+                <div class="stat-icon">📅</div>
+                <a href="Make an Appointment.html" style="text-decoration:none;" ><h3>预约挂号</h3></a>
+            </div>            
+            <div class="stat-card">
+                <div class="stat-icon">🧪</div>
+                <h3>检查报告</h3>
+            </div>            
+            <div class="stat-card">
+                <div class="stat-icon">🛏</div>
+                <a href="Be admitted to the hospital.html" style="text-decoration:none;" ><h3>住院就医</h3></a>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📋</div>
+                <h3>就诊记录</h3>
+            </div>
+
+
+
+        </div>
+
+        <section class="content-section">
+            <div class="section-header">
+                <h3>最近就诊记录</h3>
+                <a href="#" class="view-all-btn">查看全部 →</a>
+            </div>
+            <div class="record-list">
+                <div class="record-item">
+                    <div class="record-header">
+                        <span class="record-title">内科门诊</span>
+                        <span class="record-date">2025-12-10</span>
+                    </div>
+                    <div class="record-content">
+                        主诉：发热、咳嗽<br>
+                        诊断：上呼吸道感染<br>
+                        医生：李医生
+                    </div>
+                    <span class="record-badge">已完成</span>
+                </div>
+                <div class="record-item">
+                    <div class="record-header">
+                        <span class="record-title">体检中心</span>
+                        <span class="record-date">2025-11-15</span>
+                    </div>
+                    <div class="record-content">
+                        类型：年度体检<br>
+                        结果：各项指标正常<br>
+                        建议：继续保持健康生活方式
+                    </div>
+                    <span class="record-badge">已完成</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="content-section">
+            <div class="section-header">
+                <h3>快捷功能</h3>
+            </div>
+            <div class="quick-actions">
+                <a href="#" class="action-button">
+                    <div class="action-button-icon">📅</div>
+                    <div class="action-button-text">在线挂号</div>
+                </a>
+                <a href="#" class="action-button">
+                    <div class="action-button-icon">🧪</div>
+                    <div class="action-button-text">检查报告</div>
+                </a>
+                <a href="#" class="action-button">
+                    <div class="action-button-icon">💬</div>
+                    <div class="action-button-text">在线咨询</div>
+                </a>
+                <a href="#" class="action-button">
+                    <div class="action-button-icon">📝</div>
+                    <div class="action-button-text">健康档案</div>
+                </a>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

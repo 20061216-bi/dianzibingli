@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>住院就医 - 电子病历系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-bg: #0a0e27;
+            --secondary-bg: #1a1f3a;
+            --accent-color: #06b6d4;
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --card-bg: rgba(26, 31, 58, 0.6);
+            --card-border: rgba(6, 182, 212, 0.2);
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        header {
+            background: rgba(26, 31, 58, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--accent-color), #0891b2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .logo-text h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+
+        .logo-text p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .back-button {
+            padding: 0.75rem 1.5rem;
+            background: rgba(6, 182, 212, 0.1);
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-button:hover {
+            background: var(--accent-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(6, 182, 212, 0.3);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 1rem;
+            background: rgba(6, 182, 212, 0.1);
+            border-radius: 12px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-title {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 2px solid rgba(6, 182, 212, 0.3);
+        }
+
+        .page-title h2 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: var(--accent-color);
+        }
+
+        .page-title p {
+            color: var(--text-secondary);
+        }
+
+        .patient-status {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .status-badge {
+            padding: 0.5rem 1rem;
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success-color);
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .ward-info {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .info-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 2px solid var(--card-border);
+            transition: all 0.3s;
+        }
+
+        .info-card:hover {
+            border-color: var(--accent-color);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(6, 182, 212, 0.2);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(6, 182, 212, 0.2);
+        }
+
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(6, 182, 212, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .card-header h3 {
+            font-size: 1.25rem;
+            color: var(--text-primary);
+        }
+
+        .medication-schedule {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .medication-item {
+            background: rgba(10, 14, 39, 0.5);
+            padding: 1.25rem;
+            border-radius: 12px;
+            border-left: 4px solid var(--accent-color);
+            position: relative;
+        }
+
+        .medication-item.urgent {
+            border-left-color: var(--danger-color);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        .medication-name {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .medication-details {
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .medication-time {
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        .medication-status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning-color);
+        }
+
+        .status-taken {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success-color);
+        }
+
+        .status-missed {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger-color);
+        }
+
+        .treatment-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .treatment-item {
+            background: rgba(10, 14, 39, 0.5);
+            padding: 1.25rem;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .treatment-info h4 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .treatment-time {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .treatment-status {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .treatment-completed {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success-color);
+        }
+
+        .treatment-scheduled {
+            background: rgba(6, 182, 212, 0.2);
+            color: var(--accent-color);
+        }
+
+        .treatment-cancelled {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger-color);
+        }
+
+        .emergency-section {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 2px solid var(--card-border);
+            text-align: center;
+        }
+
+        .emergency-section h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--danger-color);
+        }
+
+        .emergency-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .emergency-btn {
+            padding: 1.5rem;
+            background: rgba(239, 68, 68, 0.1);
+            border: 2px solid var(--danger-color);
+            border-radius: 16px;
+            color: var(--text-primary);
+            text-decoration: none;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .emergency-btn:hover {
+            background: var(--danger-color);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(239, 68, 68, 0.3);
+        }
+
+        .emergency-btn-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .emergency-btn-text {
+            font-weight: 600;
+            font-size: 1.125rem;
+        }
+
+        .nurse-call-section {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 2px solid var(--card-border);
+        }
+
+        .nurse-call-section h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--accent-color);
+            text-align: center;
+        }
+
+        .nurse-call-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .nurse-btn {
+            padding: 1.5rem;
+            background: rgba(6, 182, 212, 0.1);
+            border: 2px solid var(--accent-color);
+            border-radius: 16px;
+            color: var(--text-primary);
+            text-decoration: none;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .nurse-btn:hover {
+            background: var(--accent-color);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(6, 182, 212, 0.3);
+        }
+
+        .nurse-btn-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .nurse-btn-text {
+            font-weight: 600;
+        }
+
+        .current-nurse {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(10, 14, 39, 0.5);
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .current-nurse h4 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .nurse-info {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .nurse-avatar {
+            width: 60px;
+            height: 60px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .nurse-details h5 {
+            font-size: 1.125rem;
+            color: var(--text-primary);
+        }
+
+        .nurse-details p {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .vital-signs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .vital-item {
+            background: rgba(10, 14, 39, 0.5);
+            padding: 1rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .vital-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+
+        .vital-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        .vital-normal {
+            color: var(--success-color);
+        }
+
+        .vital-warning {
+            color: var(--warning-color);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 3rem;
+            max-width: 500px;
+            width: 90%;
+            border: 2px solid var(--accent-color);
+            text-align: center;
+            animation: modalAppear 0.3s ease-out;
+        }
+
+        @keyframes modalAppear {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .modal-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal h3 {
+            font-size: 1.75rem;
+            margin-bottom: 1rem;
+            color: var(--accent-color);
+        }
+
+        .modal p {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .modal-btn {
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            font-size: 1rem;
+        }
+
+        .modal-btn-confirm {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .modal-btn-confirm:hover {
+            background: #0891b2;
+            transform: translateY(-2px);
+        }
+
+        .modal-btn-cancel {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .modal-btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-buttons {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .emergency-buttons,
+            .nurse-call-buttons {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">🛏</div>
+                <div class="logo-text">
+                    <h1>住院就医</h1>
+                    <p>治疗工作与护理服务</p>
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <a href="patient.html" class="back-button">
+                    ← 返回患者端
+                </a>
+                <div class="user-info">
+                    <div class="user-avatar">👤</div>
+                    <span class="user-name">张三</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="page-title">
+            <h2>住院治疗中心</h2>
+            <p>实时监控您的治疗进度和用药安排</p>
+            <div class="patient-status">
+                <span class="status-badge">住院中</span>
+                <span class="ward-info">病房：3号楼5层 512室 | 主治医生：王明主任</span>
+            </div>
+        </section>
+
+        <div class="dashboard-grid">
+            <!-- 用药提醒 -->
+            <section class="info-card">
+                <div class="card-header">
+                    <div class="card-icon">💊</div>
+                    <h3>用药提醒</h3>
+                </div>
+                <div class="medication-schedule" id="medicationList">
+                    <!-- 用药提醒列表将通过JavaScript动态生成 -->
+                </div>
+            </section>
+
+            <!-- 治疗工作 -->
+            <section class="info-card">
+                <div class="card-header">
+                    <div class="card-icon">🏥</div>
+                    <h3>今日治疗安排</h3>
+                </div>
+                <div class="treatment-list" id="treatmentList">
+                    <!-- 治疗安排列表将通过JavaScript动态生成 -->
+                </div>
+            </section>
+
+            <!-- 生命体征 -->
+            <section class="info-card">
+                <div class="card-header">
+                    <div class="card-icon">❤️</div>
+                    <h3>生命体征</h3>
+                </div>
+                <div class="vital-signs">
+                    <div class="vital-item">
+                        <div class="vital-value vital-normal">120/80</div>
+                        <div class="vital-label">血压(mmHg)</div>
+                    </div>
+                    <div class="vital-item">
+                        <div class="vital-value vital-normal">72</div>
+                        <div class="vital-label">心率(bpm)</div>
+                    </div>
+                    <div class="vital-item">
+                        <div class="vital-value vital-normal">36.8°C</div>
+                        <div class="vital-label">体温</div>
+                    </div>
+                    <div class="vital-item">
+                        <div class="vital-value vital-normal">98%</div>
+                        <div class="vital-label">血氧饱和度</div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- 呼叫护士 -->
+        <section class="nurse-call-section">
+            <h3>护士呼叫与服务</h3>
+            <div class="nurse-call-buttons">
+                <button class="nurse-btn" onclick="callNurse('常规护理')">
+                    <div class="nurse-btn-icon">🩺</div>
+                    <div class="nurse-btn-text">常规护理</div>
+                </button>
+                <button class="nurse-btn" onclick="callNurse('换药服务')">
+                    <div class="nurse-btn-icon">🩹</div>
+                    <div class="nurse-btn-text">换药服务</div>
+                </button>
+                <button class="nurse-btn" onclick="callNurse('输液检查')">
+                    <div class="nurse-btn-icon">💉</div>
+                    <div class="nurse-btn-text">输液检查</div>
+                </button>
+                <button class="nurse-btn" onclick="callNurse('疼痛缓解')">
+                    <div class="nurse-btn-icon">😣</div>
+                    <div class="nurse-btn-text">疼痛缓解</div>
+                </button>
+                <button class="nurse-btn" onclick="callNurse('生活协助')">
+                    <div class="nurse-btn-icon">🙋</div>
+                    <div class="nurse-btn-text">生活协助</div>
+                </button>
+            </div>
+            
+            <div class="current-nurse">
+                <h4>当前值班护士</h4>
+                <div class="nurse-info">
+                    <div class="nurse-avatar">李</div>
+                    <div class="nurse-details">
+                        <h5>李护士</h5>
+                        <p>值班时间：08:00-16:00 | 分机：5123</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 紧急呼叫 -->
+        <section class="emergency-section">
+            <h3>⚠️ 紧急情况呼叫</h3>
+            <p>仅在紧急情况下使用，护士站将立即响应</p>
+            <div class="emergency-buttons">
+                <button class="emergency-btn" onclick="emergencyCall('紧急医疗援助')">
+                    <div class="emergency-btn-icon">🚨</div>
+                    <div class="emergency-btn-text">紧急医疗援助</div>
+                </button>
+                <button class="emergency-btn" onclick="emergencyCall('疼痛剧烈')">
+                    <div class="emergency-btn-icon">😫</div>
+                    <div class="emergency-btn-text">疼痛剧烈</div>
+                </button>
+                <button class="emergency-btn" onclick="emergencyCall('呼吸困难')">
+                    <div class="emergency-btn-icon">😮‍💨</div>
+                    <div class="emergency-btn-text">呼吸困难</div>
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- 呼叫确认模态框 -->
+    <div class="modal" id="callModal">
+        <div class="modal-content">
+            <div class="modal-icon" id="modalIcon">📞</div>
+            <h3 id="modalTitle">呼叫护士</h3>
+            <p id="modalMessage">您确定要呼叫护士吗？</p>
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-confirm" onclick="confirmCall()">确认呼叫</button>
+                <button class="modal-btn modal-btn-cancel" onclick="closeModal()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 呼叫成功模态框 -->
+    <div class="modal" id="successModal">
+        <div class="modal-content">
+            <div class="modal-icon">✅</div>
+            <h3>呼叫成功</h3>
+            <p id="successMessage">护士已收到您的呼叫，将尽快前来</p>
+            <button class="modal-btn modal-btn-confirm" onclick="closeSuccessModal()">确定</button>
+        </div>
+    </div>
+
+    <script>
+        // 用药数据
+        const medications = [
+            {
+                id: 1,
+                name: "阿莫西林胶囊",
+                dosage: "500mg",
+                frequency: "每日3次",
+                time: "08:00",
+                status: "taken",
+                urgent: false
+            },
+            {
+                id: 2,
+                name: "布洛芬缓释片",
+                dosage: "200mg",
+                frequency: "每日2次",
+                time: "12:00",
+                status: "pending",
+                urgent: false
+            },
+            {
+                id: 3,
+                name: "降压药",
+                dosage: "10mg",
+                frequency: "每日1次",
+                time: "14:00",
+                status: "pending",
+                urgent: false
+            },
+            {
+                id: 4,
+                name: "胰岛素注射液",
+                dosage: "8单位",
+                frequency: "立即使用",
+                time: "NOW",
+                status: "pending",
+                urgent: true
+            }
+        ];
+
+        // 治疗工作数据
+        const treatments = [
+            {
+                id: 1,
+                name: "血压监测",
+                time: "08:30",
+                status: "completed",
+                description: "每日例行监测"
+            },
+            {
+                id: 2,
+                name: "换药处理",
+                time: "10:00",
+                status: "scheduled",
+                description: "伤口换药"
+            },
+            {
+                id: 3,
+                name: "物理治疗",
+                time: "14:30",
+                status: "scheduled",
+                description: "康复训练"
+            },
+            {
+                id: 4,
+                name: "医生查房",
+                time: "16:00",
+                status: "scheduled",
+                description: "主治医生查房"
+            }
+        ];
+
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            renderMedicationList();
+            renderTreatmentList();
+            updateCurrentTime();
+            
+            // 每分钟更新一次时间
+            setInterval(updateCurrentTime, 60000);
+        });
+
+        // 渲染用药提醒列表
+        function renderMedicationList() {
+            const medicationList = document.getElementById('medicationList');
+            medicationList.innerHTML = '';
+            
+            medications.forEach(med => {
+                const medItem = document.createElement('div');
+                medItem.className = `medication-item ${med.urgent ? 'urgent' : ''}`;
+                
+                let statusText = '';
+                let statusClass = '';
+                
+                switch(med.status) {
+                    case 'taken':
+                        statusText = '已服用';
+                        statusClass = 'status-taken';
+                        break;
+                    case 'pending':
+                        statusText = '待服用';
+                        statusClass = 'status-pending';
+                        break;
+                    case 'missed':
+                        statusText = '已错过';
+                        statusClass = 'status-missed';
+                        break;
+                }
+                
+                medItem.innerHTML = `
+                    <div class="medication-name">${med.name}</div>
+                    <div class="medication-details">
+                        <span>剂量：${med.dosage}</span>
+                        <span class="medication-time">${med.time}</span>
+                    </div>
+                    <div class="medication-details">
+                        <span>频率：${med.frequency}</span>
+                        <span class="medication-status ${statusClass}">${statusText}</span>
+                    </div>
+                `;
+                
+                medicationList.appendChild(medItem);
+            });
+        }
+
+        // 渲染治疗工作列表
+        function renderTreatmentList() {
+            const treatmentList = document.getElementById('treatmentList');
+            treatmentList.innerHTML = '';
+            
+            treatments.forEach(treatment => {
+                const treatmentItem = document.createElement('div');
+                treatmentItem.className = 'treatment-item';
+                
+                let statusText = '';
+                let statusClass = '';
+                
+                switch(treatment.status) {
+                    case 'completed':
+                        statusText = '已完成';
+                        statusClass = 'treatment-completed';
+                        break;
+                    case 'scheduled':
+                        statusText = '已安排';
+                        statusClass = 'treatment-scheduled';
+                        break;
+                    case 'cancelled':
+                        statusText = '已取消';
+                        statusClass = 'treatment-cancelled';
+                        break;
+                }
+                
+                treatmentItem.innerHTML = `
+                    <div class="treatment-info">
+                        <h4>${treatment.name}</h4>
+                        <div class="treatment-time">${treatment.time} | ${treatment.description}</div>
+                    </div>
+                    <div class="treatment-status ${statusClass}">${statusText}</div>
+                `;
+                
+                treatmentList.appendChild(treatmentItem);
+            });
+        }
+
+        // 更新当前时间
+        function updateCurrentTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('zh-CN', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            
+            // 更新用药状态
+            medications.forEach(med => {
+                if (med.time === 'NOW') return;
+                
+                const medTime = new Date();
+                const [hours, minutes] = med.time.split(':');
+                medTime.setHours(hours, minutes, 0, 0);
+                
+                const timeDiff = (now - medTime) / (1000 * 60); // 分钟差
+                
+                if (timeDiff > 30 && med.status === 'pending') {
+                    med.status = 'missed';
+                }
+            });
+            
+            renderMedicationList();
+        }
+
+        // 呼叫护士
+        let currentCallType = '';
+        
+        function callNurse(type) {
+            currentCallType = type;
+            const modal = document.getElementById('callModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalMessage = document.getElementById('modalMessage');
+            const modalIcon = document.getElementById('modalIcon');
+            
+            modalTitle.textContent = `呼叫护士 - ${type}`;
+            modalMessage.textContent = `您确定要呼叫护士进行"${type}"服务吗？`;
+            modalIcon.textContent = '📞';
+            
+            modal.style.display = 'flex';
+        }
+
+        // 紧急呼叫
+        function emergencyCall(type) {
+            currentCallType = type;
+            const modal = document.getElementById('callModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalMessage = document.getElementById('modalMessage');
+            const modalIcon = document.getElementById('modalIcon');
+            
+            modalTitle.textContent = `紧急呼叫 - ${type}`;
+            modalMessage.textContent = `⚠️ 紧急情况：${type}！护士站将立即响应，确定要呼叫吗？`;
+            modalIcon.textContent = '🚨';
+            
+            modal.style.display = 'flex';
+        }
+
+        // 确认呼叫
+        function confirmCall() {
+            closeModal();
+            
+            // 显示成功消息
+            const successModal = document.getElementById('successModal');
+            const successMessage = document.getElementById('successMessage');
+            
+            if (currentCallType.includes('紧急')) {
+                successMessage.textContent = `紧急呼叫"${currentCallType}"已发送！护士正在赶来的路上，请保持镇静。`;
+            } else {
+                successMessage.textContent = `"${currentCallType}"服务呼叫已发送！护士将尽快前来为您服务。`;
+            }
+            
+            successModal.style.display = 'flex';
+            
+            // 记录呼叫历史
+            logCallHistory(currentCallType);
+        }
+
+        // 关闭模态框
+        function closeModal() {
+            document.getElementById('callModal').style.display = 'none';
+        }
+
+        function closeSuccessModal() {
+            document.getElementById('successModal').style.display = 'none';
+        }
+
+        // 记录呼叫历史
+        function logCallHistory(type) {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('zh-CN', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            
+            console.log(`[${timeString}] 呼叫记录：${type}`);
+            
+            // 在实际应用中，这里可以将呼叫记录发送到服务器
+        }
+
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            const callModal = document.getElementById('callModal');
+            const successModal = document.getElementById('successModal');
+            
+            if (event.target === callModal) {
+                closeModal();
+            }
+            if (event.target === successModal) {
+                closeSuccessModal();
+            }
+        }
+
+        // 键盘事件：ESC键关闭模态框
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+                closeSuccessModal();
+            }
+        });
+    </script>
+</body>
+</html>

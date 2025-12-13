@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>电子病历系统 - 用户登录</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-bg: #0a0e27;
+            --secondary-bg: #1a1f3a;
+            --accent-patient: #06b6d4;
+            --accent-nurse: #a855f7;
+            --accent-doctor: #10b981;
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            line-height: 1.6;
+        }
+
+        header {
+            background: rgba(26, 31, 58, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #06b6d4, #10b981);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .logo-text h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #ffffff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo-text p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 2rem;
+        }
+
+        nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: var(--text-primary);
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .login-title {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .login-title h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #ffffff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .login-title p {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+        }
+
+        .login-wrapper {
+            display: flex;
+            flex-direction: row;
+            gap: 3rem;
+            width: 100%;
+        }
+
+        @media (max-width: 900px) {
+            .login-wrapper {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+
+        .role-selection {
+            flex: 1;
+            max-width: 500px;
+        }
+
+        .role-selection h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+            text-align: center;
+        }
+
+        .role-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .role-card {
+            background: rgba(26, 31, 58, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid transparent;
+        }
+
+        .role-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .role-card.active {
+            border-color: var(--active-color);
+            background: rgba(var(--active-rgb), 0.1);
+        }
+
+        .role-card.patient.active {
+            --active-color: var(--accent-patient);
+            --active-rgb: 6, 182, 212;
+        }
+
+        .role-card.nurse.active {
+            --active-color: var(--accent-nurse);
+            --active-rgb: 168, 85, 247;
+        }
+
+        .role-card.doctor.active {
+            --active-color: var(--accent-doctor);
+            --active-rgb: 16, 185, 129;
+        }
+
+        .role-card .role-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 0.75rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+        }
+
+        .role-card.patient .role-icon {
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(6, 182, 212, 0.05));
+            border: 2px solid var(--accent-patient);
+        }
+
+        .role-card.nurse .role-icon {
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(168, 85, 247, 0.05));
+            border: 2px solid var(--accent-nurse);
+        }
+
+        .role-card.doctor .role-icon {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.05));
+            border: 2px solid var(--accent-doctor);
+        }
+
+        .role-card h4 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .role-card.patient h4 {
+            color: var(--accent-patient);
+        }
+
+        .role-card.nurse h4 {
+            color: var(--accent-nurse);
+        }
+
+        .role-card.doctor h4 {
+            color: var(--accent-doctor);
+        }
+
+        .login-form-container {
+            flex: 1;
+            max-width: 400px;
+            background: rgba(26, 31, 58, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .login-form-container h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            text-align: center;
+        }
+
+        .login-form-container .role-indicator {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            font-size: 0.875rem;
+        }
+
+        .role-indicator span {
+            font-weight: 600;
+        }
+
+        .role-indicator.patient span {
+            color: var(--accent-patient);
+        }
+
+        .role-indicator.nurse span {
+            color: var(--accent-nurse);
+        }
+
+        .role-indicator.doctor span {
+            color: var(--accent-doctor);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--active-color, #06b6d4);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            font-size: 0.875rem;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .remember-me input {
+            accent-color: var(--active-color, #06b6d4);
+        }
+
+        .forgot-password {
+            color: var(--active-color, #06b6d4);
+            text-decoration: none;
+            transition: opacity 0.3s;
+        }
+
+        .forgot-password:hover {
+            opacity: 0.8;
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 1.5rem;
+            background: var(--active-color, #06b6d4);
+            color: white;
+        }
+
+        .login-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(var(--active-rgb, 6, 182, 212), 0.3);
+        }
+
+        .login-button:active {
+            transform: translateY(0);
+        }
+
+        .register-link {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .register-link a {
+            color: var(--active-color, #06b6d4);
+            text-decoration: none;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .register-link a:hover {
+            text-decoration: underline;
+        }
+
+        .features {
+            margin-top: 4rem;
+            padding: 3rem;
+            background: rgba(26, 31, 58, 0.4);
+            border-radius: 24px;
+            backdrop-filter: blur(10px);
+            width: 100%;
+        }
+
+        .features h3 {
+            text-align: center;
+            font-size: 1.75rem;
+            margin-bottom: 2rem;
+            color: var(--text-primary);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-item {
+            text-align: center;
+            padding: 1.5rem;
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-item h4 {
+            font-size: 1.125rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .feature-item p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        footer {
+            background: rgba(10, 14, 39, 0.8);
+            padding: 2rem;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            nav ul {
+                flex-direction: column;
+                gap: 0.5rem;
+                text-align: center;
+            }
+
+            .login-title h2 {
+                font-size: 2rem;
+            }
+
+            .role-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .login-form-container {
+                padding: 2rem 1.5rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">⚕️</div>
+                <div class="logo-text">
+                    <h1>电子病历系统</h1>
+                    <p>智能医疗管理平台</p>
+                </div>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="index.html">返回首页</a></li>
+                    <li><a href="#support">技术支持</a></li>
+                    <li><a href="#contact">联系我们</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <section class="login-section">
+                <div class="login-title">
+                    <h2>欢迎回来</h2>
+                    <p>请选择您的角色并登录系统</p>
+                </div>
+
+                <div class="login-wrapper">
+                    <div class="role-selection">
+                        <h3>选择登录角色</h3>
+                        <div class="role-cards">
+                            <div class="role-card patient active" data-role="patient">
+                                <div class="role-icon">👤</div>
+                                <h4>患者</h4>
+                                <p>个人健康管理</p>
+                            </div>
+                            <div class="role-card nurse" data-role="nurse">
+                                <div class="role-icon">💉</div>
+                                <h4>护士</h4>
+                                <p>护理工作管理</p>
+                            </div>
+                            <div class="role-card doctor" data-role="doctor">
+                                <div class="role-icon">🩺</div>
+                                <h4>医生</h4>
+                                <p>诊疗工作管理</p>
+                            </div>
+                        </div>
+                        
+                        <div class="features">
+                            <div class="features-grid">
+                                <div class="feature-item">
+                                    <div class="feature-icon">🔒</div>
+                                    <h4>安全可靠</h4>
+                                    <p>采用医疗级数据加密，保障患者隐私安全</p>
+                                </div>
+                                <div class="feature-item">
+                                    <div class="feature-icon">⚡</div>
+                                    <h4>高效协同</h4>
+                                    <p>医护患三方信息互通，提升诊疗效率</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="login-form-container">
+                        <h3>用户登录</h3>
+                        <div class="role-indicator patient">
+                            当前角色：<span>患者</span>
+                        </div>
+                        
+                        <form id="loginForm">
+                            <div class="form-group">
+                                <label for="username">用户名 / 病历号</label>
+                                <input type="text" id="username" class="form-control" placeholder="请输入用户名或病历号" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="password">密码</label>
+                                <input type="password" id="password" class="form-control" placeholder="请输入密码" required>
+                            </div>
+                            
+                            <div class="form-options">
+                                <label class="remember-me">
+                                    <input type="checkbox" id="remember">
+                                    记住我
+                                </label>
+                                <a href="#" class="forgot-password">忘记密码？</a>
+                            </div>
+                            
+                            <button type="submit" class="login-button" id="loginButton">登录系统</button>
+                            
+                            <div class="register-link">
+                                还没有账号？
+                                <a href="#" id="registerLink">立即注册</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 电子病历系统 | 版权所有 | 技术支持热线：400-XXX-XXXX</p>
+        <p style="margin-top: 0.5rem; font-size: 0.75rem;">本系统仅供医疗专业人员使用，请妥善保管您的账号信息</p>
+    </footer>
+
+       <script>
+        // 角色选择逻辑
+        const roleCards = document.querySelectorAll('.role-card');
+        const roleIndicator = document.querySelector('.role-indicator');
+        const loginButton = document.getElementById('loginButton');
+        const formControls = document.querySelectorAll('.form-control');
+        const loginForm = document.getElementById('loginForm');
+        
+        // 角色配置
+        const roles = {
+            patient: {
+                name: '患者',
+                color: '#06b6d4',
+                rgb: '6, 182, 212',
+                placeholder: '请输入用户名或病历号',
+                page: 'patient.html'
+            },
+            nurse: {
+                name: '护士',
+                color: '#a855f7',
+                rgb: '168, 85, 247',
+                placeholder: '请输入工号或用户名',
+                page: 'nurse.html'
+            },
+            doctor: {
+                name: '医生',
+                color: '#10b981',
+                rgb: '16, 185, 129',
+                placeholder: '请输入工号或用户名',
+                page: 'doctor.html'
+            }
+        };
+        
+        // 设置当前角色
+        let currentRole = 'patient';
+        
+        // 角色卡片点击事件
+        roleCards.forEach(card => {
+            card.addEventListener('click', function() {
+                const role = this.getAttribute('data-role');
+                
+                // 移除所有卡片的active类
+                roleCards.forEach(c => c.classList.remove('active'));
+                // 添加当前卡片的active类
+                this.classList.add('active');
+                
+                // 更新当前角色
+                currentRole = role;
+                
+                // 更新角色指示器
+                updateRoleIndicator(role);
+                
+                // 更新登录按钮样式
+                updateLoginButton(role);
+                
+                // 更新输入框焦点样式
+                updateFormControls(role);
+            });
+        });
+        
+        // 更新角色指示器
+        function updateRoleIndicator(role) {
+            roleIndicator.className = `role-indicator ${role}`;
+            roleIndicator.innerHTML = `当前角色：<span>${roles[role].name}</span>`;
+        }
+        
+        // 更新登录按钮样式
+        function updateLoginButton(role) {
+            loginButton.style.setProperty('--active-color', roles[role].color);
+            loginButton.style.setProperty('--active-rgb', roles[role].rgb);
+        }
+        
+        // 更新表单控件样式
+        function updateFormControls(role) {
+            // 更新输入框的placeholder
+            const usernameInput = document.getElementById('username');
+            usernameInput.placeholder = roles[role].placeholder;
+            
+            // 更新所有表单控件的焦点样式
+            formControls.forEach(control => {
+                control.style.setProperty('--active-color', roles[role].color);
+            });
+        }
+        
+        // 登录表单提交
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const remember = document.getElementById('remember').checked;
+            
+            // 简单验证
+            if (!username || !password) {
+                alert('请输入用户名和密码');
+                return;
+            }
+            
+            // 模拟登录过程
+            loginButton.textContent = '登录中...';
+            loginButton.disabled = true;
+            
+            // 模拟网络请求
+            setTimeout(() => {
+                // 检查是否为测试账号：用户名123，密码123
+                if (username === '123' && password === '123') {
+                    // 登录成功，跳转到对应角色页面
+                    const targetPage = roles[currentRole].page;
+                    alert(`登录成功！\n正在跳转到${roles[currentRole].name}工作台...`);
+                    
+                    // 跳转到对应页面
+                    window.location.href = targetPage;
+                } else {
+                    // 登录失败
+                    alert(`登录失败！\n用户名或密码错误\n\n测试账号：用户名：123，密码：123`);
+                    
+                    // 重置按钮状态
+                    loginButton.textContent = '登录系统';
+                    loginButton.disabled = false;
+                }
+            }, 1000);
+        });
+        
+        // 注册链接点击
+        document.getElementById('registerLink').addEventListener('click', function(e) {
+            e.preventDefault();
+            alert(`即将跳转到${roles[currentRole].name}注册页面...`);
+            // 在实际应用中，这里会跳转到相应的注册页面
+        });
+        
+        // 忘记密码链接
+        document.querySelector('.forgot-password').addEventListener('click', function(e) {
+            e.preventDefault();
+            alert(`即将跳转到${roles[currentRole].name}密码重置页面...`);
+        });
+        
+        // 初始化
+        updateRoleIndicator(currentRole);
+        updateLoginButton(currentRole);
+        updateFormControls(currentRole);
+        
+        // 添加测试账号提示
+        window.addEventListener('DOMContentLoaded', function() {
+            // 在页面加载后添加测试账号提示
+            const testInfo = document.createElement('div');
+            testInfo.style.position = 'fixed';
+            testInfo.style.bottom = '80px';
+            testInfo.style.right = '20px';
+            testInfo.style.background = 'rgba(6, 182, 212, 0.2)';
+            testInfo.style.border = '1px solid var(--accent-patient)';
+            testInfo.style.borderRadius = '8px';
+            testInfo.style.padding = '10px 15px';
+            testInfo.style.fontSize = '12px';
+            testInfo.style.color = 'var(--accent-patient)';
+            testInfo.style.zIndex = '1000';
+            testInfo.style.backdropFilter = 'blur(5px)';
+            testInfo.style.maxWidth = '200px';
+            testInfo.innerHTML = '<strong>测试账号：</strong><br>用户名：123<br>密码：123';
+            document.body.appendChild(testInfo);
+        });
+    </script>
+</body>
+</html>

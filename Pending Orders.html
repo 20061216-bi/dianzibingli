@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>待执行医嘱 - 护士端</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-bg: #0a0e27;
+            --secondary-bg: #1a1f3a;
+            --accent-color: #a855f7;
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
+            --status-pending: #f97316;
+            --status-in-progress: #eab308;
+            --status-completed: #22c55e;
+            --status-critical: #ef4444;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        header {
+            background: rgba(26, 31, 58, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--accent-color), #9333ea);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .logo-text h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+
+        .logo-text p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .back-button {
+            padding: 0.75rem 1.5rem;
+            background: rgba(168, 85, 247, 0.1);
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .back-button:hover {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 1rem;
+            background: rgba(168, 85, 247, 0.1);
+            border-radius: 12px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .page-header {
+            background: rgba(26, 31, 58, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 2px solid rgba(168, 85, 247, 0.3);
+        }
+
+        .page-header h2 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: var(--accent-color);
+        }
+
+        .page-header p {
+            color: var(--text-secondary);
+        }
+
+        .filter-section {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            min-width: 200px;
+        }
+
+        .filter-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .filter-select, .filter-input {
+            padding: 0.75rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            transition: all 0.3s;
+        }
+
+        .filter-select:focus, .filter-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(26, 31, 58, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(168, 85, 247, 0.2);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-text {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .stat-pending .stat-number { color: var(--status-pending); }
+        .stat-in-progress .stat-number { color: var(--status-in-progress); }
+        .stat-completed .stat-number { color: var(--status-completed); }
+        .stat-critical .stat-number { color: var(--status-critical); }
+
+        .orders-section {
+            background: rgba(26, 31, 58, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 2rem;
+            border: 2px solid rgba(168, 85, 247, 0.2);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(168, 85, 247, 0.2);
+        }
+
+        .section-header h3 {
+            font-size: 1.5rem;
+            color: var(--accent-color);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .action-button {
+            padding: 0.5rem 1rem;
+            background: rgba(168, 85, 247, 0.1);
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .action-button:hover {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .orders-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .orders-table th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border-bottom: 2px solid rgba(168, 85, 247, 0.2);
+        }
+
+        .orders-table td {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(168, 85, 247, 0.1);
+        }
+
+        .orders-table tr {
+            transition: all 0.3s;
+        }
+
+        .orders-table tr:hover {
+            background: rgba(168, 85, 247, 0.05);
+        }
+
+        .order-status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-pending { background: rgba(249, 115, 22, 0.2); color: var(--status-pending); }
+        .status-in-progress { background: rgba(234, 179, 8, 0.2); color: var(--status-in-progress); }
+        .status-completed { background: rgba(34, 197, 94, 0.2); color: var(--status-completed); }
+        .status-critical { background: rgba(239, 68, 68, 0.2); color: var(--status-critical); }
+
+        .order-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn {
+            padding: 0.375rem 0.75rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-execute {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .btn-execute:hover {
+            background: #9333ea;
+            transform: translateY(-1px);
+        }
+
+        .btn-details {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        .btn-details:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-discharge {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--status-critical);
+        }
+
+        .btn-discharge:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+
+        .order-details {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(10, 14, 39, 0.5);
+            border-radius: 8px;
+            display: none;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .detail-item {
+            font-size: 0.875rem;
+        }
+
+        .detail-label {
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+        }
+
+        .detail-value {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-buttons {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .filter-section {
+                flex-direction: column;
+            }
+
+            .filter-group {
+                min-width: 100%;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .orders-table {
+                display: block;
+                overflow-x: auto;
+            }
+
+            .order-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">💊</div>
+                <div class="logo-text">
+                    <h1>待执行医嘱</h1>
+                    <p>护士工作站</p>
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <a href="nurse.html" class="back-button">← 返回护士端</a>
+                <div class="user-info">
+                    <div class="user-avatar">💉</div>
+                    <span class="user-name">王护士</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="page-header">
+            <h2>待执行医嘱管理</h2>
+            <p>今日共有 8 条待执行医嘱，其中 2 条为紧急医嘱</p>
+        </section>
+
+        <div class="filter-section">
+            <div class="filter-group">
+                <div class="filter-label">状态筛选</div>
+                <select class="filter-select" id="statusFilter">
+                    <option value="all">全部状态</option>
+                    <option value="pending">待执行</option>
+                    <option value="in-progress">执行中</option>
+                    <option value="completed">已完成</option>
+                    <option value="critical">紧急</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <div class="filter-label">病区筛选</div>
+                <select class="filter-select" id="wardFilter">
+                    <option value="all">全部病区</option>
+                    <option value="3">3号病区</option>
+                    <option value="5">5号病区</option>
+                    <option value="7">7号病区</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <div class="filter-label">医嘱类型</div>
+                <select class="filter-select" id="typeFilter">
+                    <option value="all">全部类型</option>
+                    <option value="medication">药品</option>
+                    <option value="examination">检查</option>
+                    <option value="treatment">治疗</option>
+                    <option value="lab">检验</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <div class="filter-label">患者姓名/床号</div>
+                <input type="text" class="filter-input" id="searchInput" placeholder="搜索患者...">
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card stat-pending">
+                <div class="stat-number">8</div>
+                <div class="stat-text">待执行医嘱</div>
+            </div>
+            <div class="stat-card stat-in-progress">
+                <div class="stat-number">3</div>
+                <div class="stat-text">执行中</div>
+            </div>
+            <div class="stat-card stat-completed">
+                <div class="stat-number">12</div>
+                <div class="stat-text">今日已完成</div>
+            </div>
+            <div class="stat-card stat-critical">
+                <div class="stat-number">2</div>
+                <div class="stat-text">紧急医嘱</div>
+            </div>
+        </div>
+
+        <section class="orders-section">
+            <div class="section-header">
+                <h3>医嘱列表</h3>
+                <div class="action-buttons">
+                    <button class="action-button" onclick="refreshOrders()">刷新列表</button>
+                    <button class="action-button" onclick="printOrders()">打印医嘱单</button>
+                    <button class="action-button" onclick="batchExecute()">批量执行</button>
+                </div>
+            </div>
+
+            <table class="orders-table">
+                <thead>
+                    <tr>
+                        <th>医嘱ID</th>
+                        <th>患者信息</th>
+                        <th>医嘱内容</th>
+                        <th>医嘱类型</th>
+                        <th>开嘱时间</th>
+                        <th>执行时间</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="ordersTableBody">
+                    <!-- 医嘱数据将通过JavaScript动态加载 -->
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <script>
+        // 模拟医嘱数据
+        const ordersData = [
+            {
+                id: "MED001",
+                patientName: "李明",
+                bedNo: "301",
+                doctorName: "张医生",
+                orderContent: "0.9%氯化钠注射液 250ml 静脉滴注",
+                orderType: "medication",
+                dosage: "250ml",
+                frequency: "每日2次",
+                route: "静脉滴注",
+                startTime: "2025-12-13 08:00",
+                executeTime: "2025-12-13 14:00",
+                status: "critical",
+                remarks: "注意滴速控制",
+                ward: "3"
+            },
+            {
+                id: "EXAM002",
+                patientName: "王芳",
+                bedNo: "302",
+                doctorName: "李主任",
+                orderContent: "胸部CT检查",
+                orderType: "examination",
+                dosage: "1次",
+                frequency: "立即",
+                route: "CT室",
+                startTime: "2025-12-13 09:30",
+                executeTime: "2025-12-13 15:00",
+                status: "pending",
+                remarks: "需要家属陪同",
+                ward: "3"
+            },
+            {
+                id: "MED003",
+                patientName: "赵强",
+                bedNo: "303",
+                doctorName: "王医生",
+                orderContent: "布洛芬片 200mg",
+                orderType: "medication",
+                dosage: "200mg",
+                frequency: "每8小时一次",
+                route: "口服",
+                startTime: "2025-12-13 10:00",
+                executeTime: "2025-12-13 16:00",
+                status: "in-progress",
+                remarks: "饭后服用",
+                ward: "3"
+            },
+            {
+                id: "LAB004",
+                patientName: "张伟",
+                bedNo: "304",
+                doctorName: "孙医生",
+                orderContent: "血常规检查",
+                orderType: "lab",
+                dosage: "1次",
+                frequency: "立即",
+                route: "检验科",
+                startTime: "2025-12-13 11:00",
+                executeTime: "2025-12-13 11:30",
+                status: "pending",
+                remarks: "空腹",
+                ward: "3"
+            },
+            {
+                id: "TRE005",
+                patientName: "刘丽",
+                bedNo: "305",
+                doctorName: "赵医生",
+                orderContent: "伤口换药",
+                orderType: "treatment",
+                dosage: "1次",
+                frequency: "每日1次",
+                route: "病房",
+                startTime: "2025-12-13 08:30",
+                executeTime: "2025-12-13 13:00",
+                status: "completed",
+                remarks: "观察伤口愈合情况",
+                ward: "5"
+            },
+            {
+                id: "MED006",
+                patientName: "陈明",
+                bedNo: "306",
+                doctorName: "周医生",
+                orderContent: "胰岛素注射液 10U",
+                orderType: "medication",
+                dosage: "10U",
+                frequency: "餐前30分钟",
+                route: "皮下注射",
+                startTime: "2025-12-13 12:00",
+                executeTime: "2025-12-13 18:00",
+                status: "critical",
+                remarks: "注意监测血糖",
+                ward: "5"
+            },
+            {
+                id: "EXAM007",
+                patientName: "黄娟",
+                bedNo: "307",
+                doctorName: "钱医生",
+                orderContent: "心电图检查",
+                orderType: "examination",
+                dosage: "1次",
+                frequency: "立即",
+                route: "心电室",
+                startTime: "2025-12-13 14:00",
+                executeTime: "2025-12-13 14:30",
+                status: "pending",
+                remarks: "静卧10分钟后检查",
+                ward: "5"
+            },
+            {
+                id: "MED008",
+                patientName: "孙涛",
+                bedNo: "308",
+                doctorName: "吴医生",
+                orderContent: "头孢曲松钠 1g",
+                orderType: "medication",
+                dosage: "1g",
+                frequency: "每日1次",
+                route: "静脉注射",
+                startTime: "2025-12-13 09:00",
+                executeTime: "2025-12-13 17:00",
+                status: "in-progress",
+                remarks: "皮试阴性",
+                ward: "7"
+            }
+        ];
+
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            renderOrdersTable();
+            setupEventListeners();
+        });
+
+        // 渲染医嘱表格
+        function renderOrdersTable(filteredData = ordersData) {
+            const tableBody = document.getElementById('ordersTableBody');
+            tableBody.innerHTML = '';
+
+            filteredData.forEach((order, index) => {
+                const statusText = {
+                    'pending': '待执行',
+                    'in-progress': '执行中',
+                    'completed': '已完成',
+                    'critical': '紧急'
+                }[order.status];
+
+                const typeText = {
+                    'medication': '药品',
+                    'examination': '检查',
+                    'treatment': '治疗',
+                    'lab': '检验'
+                }[order.orderType];
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${order.id}</td>
+                    <td>
+                        <strong>${order.patientName}</strong><br>
+                        <small>${order.bedNo}床 | ${order.ward}号病区</small>
+                    </td>
+                    <td>${order.orderContent}</td>
+                    <td>${typeText}</td>
+                    <td>${order.startTime}</td>
+                    <td>${order.executeTime}</td>
+                    <td><span class="order-status status-${order.status}">${statusText}</span></td>
+                    <td>
+                        <div class="order-actions">
+                            <button class="btn btn-execute" onclick="executeOrder('${order.id}')">执行</button>
+                            <button class="btn btn-details" onclick="toggleDetails('${order.id}')">详情</button>
+                            ${order.status === 'critical' ? 
+                                `<button class="btn btn-discharge" onclick="markCritical('${order.id}')">紧急</button>` : ''}
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+
+                // 添加详情行
+                const detailsRow = document.createElement('tr');
+                detailsRow.id = `details-${order.id}`;
+                detailsRow.className = 'order-details-row';
+                detailsRow.innerHTML = `
+                    <td colspan="8">
+                        <div class="order-details" id="details-content-${order.id}">
+                            <div class="details-grid">
+                                <div class="detail-item">
+                                    <div class="detail-label">开嘱医生</div>
+                                    <div class="detail-value">${order.doctorName}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">剂量</div>
+                                    <div class="detail-value">${order.dosage}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">频次</div>
+                                    <div class="detail-value">${order.frequency}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">给药途径</div>
+                                    <div class="detail-value">${order.route}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">备注</div>
+                                    <div class="detail-value">${order.remarks}</div>
+                                </div>
+                            </div>
+                            <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+                                <button class="btn btn-execute" onclick="executeOrder('${order.id}')">确认执行</button>
+                                <button class="btn btn-details" onclick="delayOrder('${order.id}')">延迟执行</button>
+                                <button class="btn btn-discharge" onclick="cancelOrder('${order.id}')">取消医嘱</button>
+                            </div>
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(detailsRow);
+            });
+        }
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            const statusFilter = document.getElementById('statusFilter');
+            const wardFilter = document.getElementById('wardFilter');
+            const typeFilter = document.getElementById('typeFilter');
+            const searchInput = document.getElementById('searchInput');
+
+            [statusFilter, wardFilter, typeFilter, searchInput].forEach(filter => {
+                filter.addEventListener('change', filterOrders);
+            });
+            searchInput.addEventListener('input', filterOrders);
+        }
+
+        // 过滤医嘱
+        function filterOrders() {
+            const status = document.getElementById('statusFilter').value;
+            const ward = document.getElementById('wardFilter').value;
+            const type = document.getElementById('typeFilter').value;
+            const search = document.getElementById('searchInput').value.toLowerCase();
+
+            let filtered = ordersData;
+
+            if (status !== 'all') {
+                filtered = filtered.filter(order => order.status === status);
+            }
+
+            if (ward !== 'all') {
+                filtered = filtered.filter(order => order.ward === ward);
+            }
+
+            if (type !== 'all') {
+                filtered = filtered.filter(order => order.orderType === type);
+            }
+
+            if (search) {
+                filtered = filtered.filter(order => 
+                    order.patientName.toLowerCase().includes(search) ||
+                    order.bedNo.includes(search) ||
+                    order.orderContent.toLowerCase().includes(search)
+                );
+            }
+
+            renderOrdersTable(filtered);
+        }
+
+        // 执行医嘱
+        function executeOrder(orderId) {
+            const order = ordersData.find(o => o.id === orderId);
+            if (order) {
+                if (confirm(`确认执行医嘱 ${orderId}？\n患者：${order.patientName}\n医嘱：${order.orderContent}`)) {
+                    if (order.status !== 'completed') {
+                        order.status = 'completed';
+                        alert(`医嘱 ${orderId} 已标记为执行完成`);
+                        renderOrdersTable();
+                        updateStats();
+                    } else {
+                        alert('该医嘱已完成执行');
+                    }
+                }
+            }
+        }
+
+        // 切换详情显示
+        function toggleDetails(orderId) {
+            const details = document.getElementById(`details-content-${orderId}`);
+            if (details.style.display === 'block') {
+                details.style.display = 'none';
+            } else {
+                // 隐藏其他详情
+                document.querySelectorAll('.order-details').forEach(d => {
+                    d.style.display = 'none';
+                });
+                details.style.display = 'block';
+            }
+        }
+
+        // 延迟医嘱
+        function delayOrder(orderId) {
+            const order = ordersData.find(o => o.id === orderId);
+            if (order) {
+                const newTime = prompt('请输入新的执行时间（格式：HH:mm）：', order.executeTime.split(' ')[1]);
+                if (newTime) {
+                    order.executeTime = `${order.executeTime.split(' ')[0]} ${newTime}`;
+                    order.status = 'pending';
+                    alert(`医嘱 ${orderId} 已延迟至 ${newTime}`);
+                    renderOrdersTable();
+                }
+            }
+        }
+
+        // 取消医嘱
+        function cancelOrder(orderId) {
+            if (confirm('确定要取消此医嘱吗？')) {
+                const index = ordersData.findIndex(o => o.id === orderId);
+                if (index !== -1) {
+                    ordersData.splice(index, 1);
+                    alert('医嘱已取消');
+                    renderOrdersTable();
+                    updateStats();
+                }
+            }
+        }
+
+        // 标记为紧急
+        function markCritical(orderId) {
+            const order = ordersData.find(o => o.id === orderId);
+            if (order) {
+                order.status = 'critical';
+                alert('已标记为紧急医嘱');
+                renderOrdersTable();
+            }
+        }
+
+        // 刷新医嘱列表
+        function refreshOrders() {
+            renderOrdersTable();
+            alert('医嘱列表已刷新');
+        }
+
+        // 打印医嘱单
+        function printOrders() {
+            alert('打印功能将在新窗口打开医嘱单');
+            // 实际应用中这里会打开打印窗口
+        }
+
+        // 批量执行
+        function batchExecute() {
+            const pendingOrders = ordersData.filter(o => o.status === 'pending' || o.status === 'critical');
+            if (pendingOrders.length === 0) {
+                alert('没有待执行的医嘱');
+                return;
+            }
+
+            if (confirm(`确认批量执行 ${pendingOrders.length} 条医嘱？`)) {
+                pendingOrders.forEach(order => {
+                    order.status = 'completed';
+                });
+                alert(`${pendingOrders.length} 条医嘱已批量执行完成`);
+                renderOrdersTable();
+                updateStats();
+            }
+        }
+
+        // 更新统计信息
+        function updateStats() {
+            const pending = ordersData.filter(o => o.status === 'pending').length;
+            const inProgress = ordersData.filter(o => o.status === 'in-progress').length;
+            const completed = ordersData.filter(o => o.status === 'completed').length;
+            const critical = ordersData.filter(o => o.status === 'critical').length;
+
+            document.querySelectorAll('.stat-number')[0].textContent = pending + inProgress + critical;
+            document.querySelectorAll('.stat-number')[1].textContent = inProgress;
+            document.querySelectorAll('.stat-number')[2].textContent = completed;
+            document.querySelectorAll('.stat-number')[3].textContent = critical;
+        }
+    </script>
+</body>
+</html>

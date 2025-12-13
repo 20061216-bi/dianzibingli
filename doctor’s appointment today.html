@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>今日看诊信息 - 医生端</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-bg: #0a0e27;
+            --secondary-bg: #1a1f3a;
+            --accent-color: #10b981;
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
+            --status-waiting: #f59e0b;
+            --status-consulting: #3b82f6;
+            --status-completed: #10b981;
+            --status-cancelled: #ef4444;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        header {
+            background: rgba(26, 31, 58, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--accent-color), #059669);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .logo-text h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+
+        .logo-text p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .back-button {
+            padding: 0.75rem 1.5rem;
+            background: rgba(16, 185, 129, 0.1);
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .back-button:hover {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 1rem;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 12px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .page-header {
+            background: rgba(26, 31, 58, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 2px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .page-header h2 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: var(--accent-color);
+        }
+
+        .page-header p {
+            color: var(--text-secondary);
+        }
+
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(26, 31, 58, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 1.5rem;
+            border: 2px solid rgba(16, 185, 129, 0.2);
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .stat-card:hover {
+            border-color: var(--accent-color);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.2);
+        }
+
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-waiting .stat-number { color: var(--status-waiting); }
+        .stat-consulting .stat-number { color: var(--status-consulting); }
+        .stat-completed .stat-number { color: var(--status-completed); }
+        .stat-total .stat-number { color: var(--accent-color); }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .control-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-select {
+            padding: 0.75rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            min-width: 150px;
+            transition: all 0.3s;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .action-button {
+            padding: 0.75rem 1.5rem;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .action-button:hover {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .consultation-section {
+            background: rgba(26, 31, 58, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 2rem;
+            border: 2px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .section-header h3 {
+            font-size: 1.5rem;
+            color: var(--accent-color);
+        }
+
+        .time-display {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+        }
+
+        .patients-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .patient-card {
+            background: rgba(10, 14, 39, 0.5);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid rgba(16, 185, 129, 0.1);
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .patient-card:hover {
+            border-color: var(--accent-color);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .patient-info {
+            flex: 1;
+        }
+
+        .patient-name {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: var(--text-primary);
+        }
+
+        .patient-meta {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .consultation-status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-waiting { background: rgba(245, 158, 11, 0.2); color: var(--status-waiting); }
+        .status-consulting { background: rgba(59, 130, 246, 0.2); color: var(--status-consulting); }
+        .status-completed { background: rgba(16, 185, 129, 0.2); color: var(--status-completed); }
+        .status-cancelled { background: rgba(239, 68, 68, 0.2); color: var(--status-cancelled); }
+
+        .card-content {
+            margin-bottom: 1rem;
+        }
+
+        .content-row {
+            display: flex;
+            margin-bottom: 0.75rem;
+            font-size: 0.875rem;
+        }
+
+        .row-label {
+            width: 80px;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+        }
+
+        .row-value {
+            flex: 1;
+            color: var(--text-primary);
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(16, 185, 129, 0.1);
+        }
+
+        .consultation-time {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn {
+            padding: 0.375rem 0.75rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--status-cancelled);
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-title {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-description {
+            font-size: 0.875rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: var(--secondary-bg);
+            border-radius: 24px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 800px;
+            border: 2px solid var(--accent-color);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .modal-header h3 {
+            font-size: 1.5rem;
+            color: var(--accent-color);
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .consultation-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .detail-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .detail-item {
+            font-size: 0.875rem;
+        }
+
+        .detail-label {
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+        }
+
+        .detail-value {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .prescription-section {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 2px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .prescription-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--accent-color);
+        }
+
+        .prescription-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .prescription-info h4 {
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+            color: var(--text-primary);
+        }
+
+        .prescription-details {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-buttons {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .stats-overview {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .control-panel {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-select {
+                width: 100%;
+            }
+
+            .action-buttons {
+                justify-content: stretch;
+            }
+
+            .action-button {
+                flex: 1;
+                text-align: center;
+            }
+
+            .patients-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .card-footer {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: stretch;
+            }
+
+            .card-actions {
+                justify-content: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">🩺</div>
+                <div class="logo-text">
+                    <h1>今日看诊信息</h1>
+                    <p>医生工作站</p>
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <a href="doctor.html" class="back-button">← 返回医生端</a>
+                <div class="user-info">
+                    <div class="user-avatar">🩺</div>
+                    <span class="user-name">李医生</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="page-header">
+            <h2>今日看诊管理</h2>
+            <p>今日门诊时间：08:00 - 17:00 | 当前时间：<span id="currentTime"></span></p>
+        </section>
+
+        <div class="stats-overview">
+            <div class="stat-card stat-total">
+                <div class="stat-icon">👥</div>
+                <div class="stat-number" id="totalPatients">8</div>
+                <div class="stat-label">今日患者总数</div>
+            </div>
+            <div class="stat-card stat-waiting">
+                <div class="stat-icon">⏳</div>
+                <div class="stat-number" id="waitingPatients">3</div>
+                <div class="stat-label">等待就诊</div>
+            </div>
+            <div class="stat-card stat-consulting">
+                <div class="stat-icon">🩺</div>
+                <div class="stat-number" id="consultingPatients">1</div>
+                <div class="stat-label">正在就诊</div>
+            </div>
+            <div class="stat-card stat-completed">
+                <div class="stat-icon">✅</div>
+                <div class="stat-number" id="completedPatients">4</div>
+                <div class="stat-label">已完成</div>
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <div class="filter-group">
+                <select class="filter-select" id="statusFilter">
+                    <option value="all">全部状态</option>
+                    <option value="waiting">等待就诊</option>
+                    <option value="consulting">正在就诊</option>
+                    <option value="completed">已完成</option>
+                    <option value="cancelled">已取消</option>
+                </select>
+                <select class="filter-select" id="typeFilter">
+                    <option value="all">全部类型</option>
+                    <option value="new">初诊</option>
+                    <option value="followup">复诊</option>
+                    <option value="emergency">急诊</option>
+                </select>
+                <select class="filter-select" id="timeFilter">
+                    <option value="all">全部时段</option>
+                    <option value="morning">上午 (08:00-12:00)</option>
+                    <option value="afternoon">下午 (13:00-17:00)</option>
+                </select>
+            </div>
+            <div class="action-buttons">
+                <button class="action-button" onclick="refreshConsultations()">刷新列表</button>
+                <button class="action-button" onclick="startNextConsultation()">开始下一位</button>
+                <button class="action-button" onclick="addNewPatient()">新增患者</button>
+            </div>
+        </div>
+
+        <section class="consultation-section">
+            <div class="section-header">
+                <h3>患者就诊列表</h3>
+                <div class="time-display">
+                    今日已就诊：<span id="consultedCount">4</span>人 | 
+                    平均就诊时间：<span id="avgTime">15</span>分钟
+                </div>
+            </div>
+
+            <div class="patients-grid" id="patientsGrid">
+                <!-- 患者卡片将通过JavaScript动态加载 -->
+            </div>
+        </section>
+    </main>
+
+    <!-- 就诊详情模态框 -->
+    <div class="modal" id="consultationModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>就诊详情</h3>
+                <button class="close-modal" onclick="closeModal()">×</button>
+            </div>
+            <div id="consultationDetails">
+                <!-- 详情内容将通过JavaScript动态加载 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟今日看诊数据
+        const consultationsData = [
+            {
+                id: "C001",
+                patientName: "张明",
+                patientId: "P20251213001",
+                age: 45,
+                gender: "男",
+                phone: "138****1234",
+                type: "followup",
+                chiefComplaint: "咳嗽、咳痰5天，伴发热",
+                history: "高血压病史3年，规律服药",
+                appointmentTime: "08:30",
+                actualTime: "08:35",
+                status: "completed",
+                diagnosis: "急性支气管炎",
+                prescription: [
+                    { name: "阿莫西林胶囊", dosage: "0.5g", frequency: "每日3次", days: 7 },
+                    { name: "复方甘草口服液", dosage: "10ml", frequency: "每日3次", days: 5 }
+                ],
+                notes: "建议休息，多饮水，3天后复诊",
+                nurseNotes: "体温38.2℃，血压130/85mmHg"
+            },
+            {
+                id: "C002",
+                patientName: "李小红",
+                patientId: "P20251213002",
+                age: 62,
+                gender: "女",
+                phone: "139****5678",
+                type: "new",
+                chiefComplaint: "头晕、头痛1周",
+                history: "无特殊病史",
+                appointmentTime: "09:15",
+                actualTime: "09:20",
+                status: "consulting",
+                diagnosis: "高血压病？",
+                prescription: [],
+                notes: "需要进一步检查确诊",
+                nurseNotes: "血压155/95mmHg，心率88次/分"
+            },
+            {
+                id: "C003",
+                patientName: "王强",
+                patientId: "P20251213003",
+                age: 38,
+                gender: "男",
+                phone: "136****9012",
+                type: "followup",
+                chiefComplaint: "糖尿病复查",
+                history: "2型糖尿病病史5年",
+                appointmentTime: "10:00",
+                actualTime: "10:00",
+                status: "waiting",
+                diagnosis: "",
+                prescription: [],
+                notes: "",
+                nurseNotes: "空腹血糖7.2mmol/L，体重85kg"
+            },
+            {
+                id: "C004",
+                patientName: "赵丽",
+                patientId: "P20251213004",
+                age: 28,
+                gender: "女",
+                phone: "135****3456",
+                type: "emergency",
+                chiefComplaint: "腹痛、腹泻2小时",
+                history: "无特殊病史",
+                appointmentTime: "10:30",
+                actualTime: "10:25",
+                status: "waiting",
+                diagnosis: "",
+                prescription: [],
+                notes: "",
+                nurseNotes: "体温37.8℃，腹部压痛(+)"
+            },
+            {
+                id: "C005",
+                patientName: "刘建国",
+                patientId: "P20251213005",
+                age: 55,
+                gender: "男",
+                phone: "137****7890",
+                type: "followup",
+                chiefComplaint: "冠心病复诊",
+                history: "冠心病病史8年，支架术后2年",
+                appointmentTime: "11:00",
+                actualTime: "10:55",
+                status: "completed",
+                diagnosis: "冠状动脉粥样硬化性心脏病",
+                prescription: [
+                    { name: "阿司匹林肠溶片", dosage: "100mg", frequency: "每日1次", days: 30 },
+                    { name: "阿托伐他汀钙片", dosage: "20mg", frequency: "每晚1次", days: 30 }
+                ],
+                notes: "继续服药，注意休息，避免劳累",
+                nurseNotes: "血压125/80mmHg，心率72次/分，心电图正常"
+            },
+            {
+                id: "C006",
+                patientName: "陈芳",
+                patientId: "P20251213006",
+                age: 33,
+                gender: "女",
+                phone: "134****2345",
+                type: "new",
+                chiefComplaint: "体检报告咨询",
+                history: "无特殊病史",
+                appointmentTime: "14:00",
+                actualTime: "",
+                status: "waiting",
+                diagnosis: "",
+                prescription: [],
+                notes: "",
+                nurseNotes: "体检报告已准备好"
+            },
+            {
+                id: "C007",
+                patientName: "周涛",
+                patientId: "P20251213007",
+                age: 50,
+                gender: "男",
+                phone: "131****6789",
+                type: "followup",
+                chiefComplaint: "痛风复查",
+                history: "痛风病史3年",
+                appointmentTime: "14:30",
+                actualTime: "",
+                status: "waiting",
+                diagnosis: "",
+                prescription: [],
+                notes: "",
+                nurseNotes: "血尿酸450μmol/L"
+            },
+            {
+                id: "C008",
+                patientName: "孙静",
+                patientId: "P20251213008",
+                age: 26,
+                gender: "女",
+                phone: "132****1234",
+                type: "emergency",
+                chiefComplaint: "外伤缝合后拆线",
+                history: "右手外伤缝合后7天",
+                appointmentTime: "15:00",
+                actualTime: "",
+                status: "cancelled",
+                diagnosis: "",
+                prescription: [],
+                notes: "患者电话取消预约",
+                nurseNotes: "伤口愈合良好"
+            }
+        ];
+
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCurrentTime();
+            renderPatientsGrid();
+            setupEventListeners();
+            updateStats();
+            setInterval(updateCurrentTime, 1000);
+        });
+
+        // 更新当前时间
+        function updateCurrentTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('zh-CN', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            document.getElementById('currentTime').textContent = timeString;
+        }
+
+        // 渲染患者网格
+        function renderPatientsGrid(filteredData = consultationsData) {
+            const patientsGrid = document.getElementById('patientsGrid');
+            
+            if (filteredData.length === 0) {
+                patientsGrid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🩺</div>
+                        <div class="empty-title">暂无就诊患者</div>
+                        <div class="empty-description">当前筛选条件下没有找到就诊患者</div>
+                        <button class="action-button" onclick="clearFilters()">清除筛选</button>
+                    </div>
+                `;
+                return;
+            }
+
+            patientsGrid.innerHTML = '';
+            
+            filteredData.forEach(consultation => {
+                const typeText = {
+                    'new': '初诊',
+                    'followup': '复诊',
+                    'emergency': '急诊'
+                }[consultation.type];
+
+                const statusText = {
+                    'waiting': '等待就诊',
+                    'consulting': '正在就诊',
+                    'completed': '已完成',
+                    'cancelled': '已取消'
+                }[consultation.status];
+
+                const statusClass = `status-${consultation.status}`;
+
+                const patientCard = document.createElement('div');
+                patientCard.className = 'patient-card';
+                patientCard.innerHTML = `
+                    <div class="card-header">
+                        <div class="patient-info">
+                            <div class="patient-name">${consultation.patientName} (${consultation.age}岁)</div>
+                            <div class="patient-meta">
+                                ${consultation.patientId} | ${consultation.gender} | ${typeText}
+                            </div>
+                        </div>
+                        <span class="consultation-status ${statusClass}">${statusText}</span>
+                    </div>
+                    
+                    <div class="card-content">
+                        <div class="content-row">
+                            <div class="row-label">主诉</div>
+                            <div class="row-value">${consultation.chiefComplaint || '未填写'}</div>
+                        </div>
+                        <div class="content-row">
+                            <div class="row-label">既往史</div>
+                            <div class="row-value">${consultation.history || '无'}</div>
+                        </div>
+                        ${consultation.diagnosis ? `
+                        <div class="content-row">
+                            <div class="row-label">初步诊断</div>
+                            <div class="row-value">${consultation.diagnosis}</div>
+                        </div>
+                        ` : ''}
+                        ${consultation.nurseNotes ? `
+                        <div class="content-row">
+                            <div class="row-label">护士记录</div>
+                            <div class="row-value">${consultation.nurseNotes}</div>
+                        </div>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="card-footer">
+                        <div class="consultation-time">
+                            预约时间：${consultation.appointmentTime}
+                            ${consultation.actualTime ? `<br>实际时间：${consultation.actualTime}` : ''}
+                        </div>
+                        <div class="card-actions">
+                            ${consultation.status === 'waiting' ? 
+                                `<button class="btn btn-primary" onclick="startConsultation('${consultation.id}')">开始就诊</button>` : ''}
+                            ${consultation.status === 'consulting' ? 
+                                `<button class="btn btn-primary" onclick="completeConsultation('${consultation.id}')">结束就诊</button>` : ''}
+                            <button class="btn btn-secondary" onclick="viewDetails('${consultation.id}')">详情</button>
+                            ${consultation.status !== 'completed' && consultation.status !== 'cancelled' ? 
+                                `<button class="btn btn-danger" onclick="cancelConsultation('${consultation.id}')">取消</button>` : ''}
+                        </div>
+                    </div>
+                `;
+                patientsGrid.appendChild(patientCard);
+            });
+        }
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            const statusFilter = document.getElementById('statusFilter');
+            const typeFilter = document.getElementById('typeFilter');
+            const timeFilter = document.getElementById('timeFilter');
+
+            [statusFilter, typeFilter, timeFilter].forEach(filter => {
+                filter.addEventListener('change', filterConsultations);
+            });
+        }
+
+        // 过滤就诊记录
+        function filterConsultations() {
+            const status = document.getElementById('statusFilter').value;
+            const type = document.getElementById('typeFilter').value;
+            const time = document.getElementById('timeFilter').value;
+
+            let filtered = consultationsData;
+
+            if (status !== 'all') {
+                filtered = filtered.filter(c => c.status === status);
+            }
+
+            if (type !== 'all') {
+                filtered = filtered.filter(c => c.type === type);
+            }
+
+            if (time !== 'all') {
+                filtered = filtered.filter(c => {
+                    if (!c.appointmentTime) return false;
+                    const hour = parseInt(c.appointmentTime.split(':')[0]);
+                    if (time === 'morning') {
+                        return hour >= 8 && hour < 12;
+                    } else if (time === 'afternoon') {
+                        return hour >= 13 && hour < 17;
+                    }
+                    return true;
+                });
+            }
+
+            renderPatientsGrid(filtered);
+            updateStats(filtered);
+        }
+
+        // 更新统计信息
+        function updateStats(filteredData = consultationsData) {
+            const total = filteredData.length;
+            const waiting = filteredData.filter(c => c.status === 'waiting').length;
+            const consulting = filteredData.filter(c => c.status === 'consulting').length;
+            const completed = filteredData.filter(c => c.status === 'completed').length;
+            
+            document.getElementById('totalPatients').textContent = total;
+            document.getElementById('waitingPatients').textContent = waiting;
+            document.getElementById('consultingPatients').textContent = consulting;
+            document.getElementById('completedPatients').textContent = completed;
+            document.getElementById('consultedCount').textContent = completed;
+            
+            // 计算平均就诊时间（模拟数据）
+            const avgTime = Math.floor(Math.random() * 10) + 10;
+            document.getElementById('avgTime').textContent = avgTime;
+        }
+
+        // 开始就诊
+        function startConsultation(consultationId) {
+            const consultation = consultationsData.find(c => c.id === consultationId);
+            if (consultation) {
+                consultation.status = 'consulting';
+                consultation.actualTime = new Date().toLocaleTimeString('zh-CN', { 
+                    hour: '2-digit', 
+                    minute: '2-digit'
+                });
+                alert(`开始就诊：${consultation.patientName}`);
+                renderPatientsGrid();
+                updateStats();
+            }
+        }
+
+        // 完成就诊
+        function completeConsultation(consultationId) {
+            const consultation = consultationsData.find(c => c.id === consultationId);
+            if (consultation) {
+                consultation.status = 'completed';
+                
+                // 模拟填写诊断和处方
+                if (!consultation.diagnosis) {
+                    consultation.diagnosis = prompt('请输入诊断结果：', consultation.diagnosis || '');
+                }
+                
+                if (consultation.diagnosis && consultation.prescription.length === 0) {
+                    if (confirm('是否开具处方？')) {
+                        consultation.prescription = [
+                            { name: "示例药物", dosage: "1片", frequency: "每日2次", days: 7 }
+                        ];
+                        consultation.notes = "请遵医嘱服药，定期复查";
+                    }
+                }
+                
+                alert(`就诊完成：${consultation.patientName}`);
+                renderPatientsGrid();
+                updateStats();
+            }
+        }
+
+        // 查看详情
+        function viewDetails(consultationId) {
+            const consultation = consultationsData.find(c => c.id === consultationId);
+            if (consultation) {
+                const modal = document.getElementById('consultationModal');
+                const details = document.getElementById('consultationDetails');
+                
+                const typeText = {
+                    'new': '初诊',
+                    'followup': '复诊',
+                    'emergency': '急诊'
+                }[consultation.type];
+                
+                const statusText = {
+                    'waiting': '等待就诊',
+                    'consulting': '正在就诊',
+                    'completed': '已完成',
+                    'cancelled': '已取消'
+                }[consultation.status];
+                
+                let prescriptionHTML = '';
+                if (consultation.prescription.length > 0) {
+                    prescriptionHTML = `
+                        <div class="prescription-section">
+                            <div class="prescription-title">💊 处方信息</div>
+                            ${consultation.prescription.map(p => `
+                                <div class="prescription-item">
+                                    <div class="prescription-info">
+                                        <h4>${p.name}</h4>
+                                        <div class="prescription-details">
+                                            剂量：${p.dosage} | 频次：${p.frequency} | 天数：${p.days}天
+                                        </div>
+                                    </div>
+                                    <button class="btn btn-secondary" onclick="editPrescription('${consultation.id}')">修改</button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+                
+                details.innerHTML = `
+                    <div class="consultation-details">
+                        <div class="detail-group">
+                            <div class="detail-item">
+                                <div class="detail-label">患者姓名</div>
+                                <div class="detail-value">${consultation.patientName}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">患者ID</div>
+                                <div class="detail-value">${consultation.patientId}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">年龄/性别</div>
+                                <div class="detail-value">${consultation.age}岁 / ${consultation.gender}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">联系电话</div>
+                                <div class="detail-value">${consultation.phone}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-group">
+                            <div class="detail-item">
+                                <div class="detail-label">就诊类型</div>
+                                <div class="detail-value">${typeText}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">当前状态</div>
+                                <div class="detail-value">${statusText}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">预约时间</div>
+                                <div class="detail-value">${consultation.appointmentTime}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">实际时间</div>
+                                <div class="detail-value">${consultation.actualTime || '未就诊'}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 2rem;">
+                        <div class="detail-item">
+                            <div class="detail-label">主诉</div>
+                            <div class="detail-value">${consultation.chiefComplaint}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">既往史</div>
+                            <div class="detail-value">${consultation.history}</div>
+                        </div>
+                        ${consultation.diagnosis ? `
+                        <div class="detail-item">
+                            <div class="detail-label">诊断结果</div>
+                            <div class="detail-value">${consultation.diagnosis}</div>
+                        </div>
+                        ` : ''}
+                        <div class="detail-item">
+                            <div class="detail-label">护士记录</div>
+                            <div class="detail-value">${consultation.nurseNotes}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">医生建议</div>
+                            <div class="detail-value">${consultation.notes || '无'}</div>
+                        </div>
+                    </div>
+                    
+                    ${prescriptionHTML}
+                    
+                    <div style="margin-top: 2rem; display: flex; justify-content: flex-end; gap: 1rem;">
+                        <button class="action-button" onclick="printConsultation('${consultation.id}')">打印病历</button>
+                        <button class="action-button" onclick="editConsultation('${consultation.id}')">编辑记录</button>
+                    </div>
+                `;
+                
+                modal.style.display = 'flex';
+            }
+        }
+
+        // 取消就诊
+        function cancelConsultation(consultationId) {
+            if (confirm('确定要取消这次就诊吗？')) {
+                const consultation = consultationsData.find(c => c.id === consultationId);
+                if (consultation) {
+                    consultation.status = 'cancelled';
+                    consultation.notes = '患者取消就诊';
+                    alert('就诊已取消');
+                    renderPatientsGrid();
+                    updateStats();
+                }
+            }
+        }
+
+        // 关闭模态框
+        function closeModal() {
+            document.getElementById('consultationModal').style.display = 'none';
+        }
+
+        // 刷新就诊列表
+        function refreshConsultations() {
+            renderPatientsGrid();
+            updateStats();
+            alert('就诊列表已刷新');
+        }
+
+        // 开始下一位就诊
+        function startNextConsultation() {
+            const waitingConsultations = consultationsData.filter(c => c.status === 'waiting');
+            if (waitingConsultations.length === 0) {
+                alert('没有等待就诊的患者');
+                return;
+            }
+            
+            // 按预约时间排序，选择最早的一位
+            const nextPatient = waitingConsultations.sort((a, b) => 
+                a.appointmentTime.localeCompare(b.appointmentTime)
+            )[0];
+            
+            startConsultation(nextPatient.id);
+        }
+
+        // 新增患者
+        function addNewPatient() {
+            alert('新增患者功能（打开新患者登记表单）');
+        }
+
+        // 清除筛选
+        function clearFilters() {
+            document.getElementById('statusFilter').value = 'all';
+            document.getElementById('typeFilter').value = 'all';
+            document.getElementById('timeFilter').value = 'all';
+            filterConsultations();
+        }
+
+        // 编辑处方
+        function editPrescription(consultationId) {
+            alert('编辑处方功能');
+        }
+
+        // 打印病历
+        function printConsultation(consultationId) {
+            alert('打印病历功能');
+        }
+
+        // 编辑记录
+        function editConsultation(consultationId) {
+            alert('编辑就诊记录功能');
+        }
+
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            const modal = document.getElementById('consultationModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>
