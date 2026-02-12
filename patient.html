@@ -317,6 +317,97 @@
             font-weight: 600;
         }
 
+        /* 缴费信息端口样式 */
+        .payment-portal {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .payment-card {
+            background: rgba(10, 14, 39, 0.5);
+            border: 2px solid rgba(6, 182, 212, 0.3);
+            border-radius: 20px;
+            padding: 2rem;
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: all 0.3s;
+            display: block;
+        }
+
+        .payment-card:hover {
+            border-color: var(--accent-color);
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(6, 182, 212, 0.2);
+            background: rgba(6, 182, 212, 0.05);
+        }
+
+        .payment-icon {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(6, 182, 212, 0.1));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            border: 2px solid rgba(6, 182, 212, 0.3);
+        }
+
+        .payment-card h4 {
+            font-size: 1.25rem;
+            color: var(--accent-color);
+            margin-bottom: 0.75rem;
+        }
+
+        .payment-card p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .payment-stats {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .payment-stat {
+            text-align: center;
+        }
+
+        .payment-stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            display: block;
+        }
+
+        .payment-stat-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        .payment-btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: rgba(6, 182, 212, 0.1);
+            border: 2px solid var(--accent-color);
+            border-radius: 25px;
+            color: var(--accent-color);
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .payment-card:hover .payment-btn {
+            background: var(--accent-color);
+            color: white;
+        }
+
         @media (max-width: 768px) {
             .header-content {
                 flex-direction: column;
@@ -334,6 +425,15 @@
 
             .quick-actions {
                 grid-template-columns: 1fr;
+            }
+
+            .payment-portal {
+                grid-template-columns: 1fr;
+            }
+
+            .payment-stats {
+                flex-direction: column;
+                gap: 1rem;
             }
         }
     </style>
@@ -380,10 +480,52 @@
                 <div class="stat-icon">📋</div>
                 <h3>就诊记录</h3>
             </div>
-
-
-
         </div>
+        <!-- 缴费信息端口 -->
+        <section class="content-section">
+            <div class="section-header">
+                <h3>💳 缴费信息</h3>
+                <span style="color: var(--text-secondary); font-size: 0.875rem;">医保与自费缴费管理</span>
+            </div>
+            
+            <div class="payment-portal">
+                <!-- 医保缴费入口 -->
+                <a href="patient-insurance.html" class="payment-card">
+                    <div class="payment-icon">🏥</div>
+                    <h4>医保缴费</h4>
+                    <p>查看医保报销明细、个人自付金额、医保账户余额及历史结算记录</p>
+                    <div class="payment-stats">
+                        <div class="payment-stat">
+                            <span class="payment-stat-value">¥1,250</span>
+                            <span class="payment-stat-label">本年累计报销</span>
+                        </div>
+                        <div class="payment-stat">
+                            <span class="payment-stat-value">¥3,680</span>
+                            <span class="payment-stat-label">账户余额</span>
+                        </div>
+                    </div>
+                    <span class="payment-btn">进入管理 →</span>
+                </a>
+
+                <!-- 自费缴费入口 -->
+                <a href="patient-selfpay.html" class="payment-card">
+                    <div class="payment-icon">💳</div>
+                    <h4>自费缴费</h4>
+                    <p>在线支付医疗费用、查看自费明细、押金管理及电子发票下载</p>
+                    <div class="payment-stats">
+                        <div class="payment-stat">
+                            <span class="payment-stat-value">¥580</span>
+                            <span class="payment-stat-label">待缴费用</span>
+                        </div>
+                        <div class="payment-stat">
+                            <span class="payment-stat-value">12</span>
+                            <span class="payment-stat-label">历史订单</span>
+                        </div>
+                    </div>
+                    <span class="payment-btn">进入管理 →</span>
+                </a>
+            </div>
+        </section>
 
         <section class="content-section">
             <div class="section-header">

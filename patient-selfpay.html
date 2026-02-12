@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自费缴费 - 患者端</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-bg: #0a0e27;
+            --secondary-bg: #1a1f3a;
+            --accent-color: #06b6d4;
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        header {
+            background: rgba(26, 31, 58, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--accent-color), #0891b2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .logo-text h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+
+        .back-button {
+            padding: 0.75rem 1.5rem;
+            background: rgba(6, 182, 212, 0.1);
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .back-button:hover {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-title {
+            font-size: 1.75rem;
+            color: var(--accent-color);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .payment-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid rgba(6, 182, 212, 0.2);
+            padding-bottom: 1rem;
+        }
+
+        .tab-btn {
+            padding: 1rem 2rem;
+            background: rgba(6, 182, 212, 0.1);
+            border: 2px solid var(--accent-color);
+            border-radius: 12px;
+            color: var(--accent-color);
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .content-section {
+            background: rgba(26, 31, 58, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 2px solid rgba(6, 182, 212, 0.2);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(6, 182, 212, 0.2);
+        }
+
+        .section-header h3 {
+            font-size: 1.25rem;
+            color: var(--accent-color);
+        }
+
+        .pending-amount {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            background: rgba(239, 68, 68, 0.1);
+            border: 2px solid rgba(239, 68, 68, 0.3);
+            border-radius: 16px;
+            margin-bottom: 1.5rem;
+        }
+
+        .pending-label {
+            font-size: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .pending-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #ef4444;
+        }
+
+        .bill-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .bill-item {
+            background: rgba(10, 14, 39, 0.5);
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid rgba(6, 182, 212, 0.1);
+            transition: all 0.3s;
+        }
+
+        .bill-item:hover {
+            border-color: var(--accent-color);
+            transform: translateX(5px);
+        }
+
+        .bill-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .bill-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .bill-date {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .bill-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .detail-item {
+            text-align: center;
+            padding: 0.75rem;
+            background: rgba(26, 31, 58, 0.6);
+            border-radius: 8px;
+        }
+
+        .detail-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+        }
+
+        .detail-value {
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .bill-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0891b2;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: rgba(6, 182, 212, 0.1);
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            background: rgba(10, 14, 39, 0.5);
+            border-radius: 12px;
+            margin-bottom: 0.75rem;
+        }
+
+        .history-info h4 {
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .history-info p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .history-amount {
+            text-align: right;
+        }
+
+        .history-amount .amount {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+
+        .history-amount .status {
+            font-size: 0.75rem;
+            color: #10b981;
+            margin-top: 0.25rem;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .payment-tabs {
+                overflow-x: auto;
+                flex-wrap: nowrap;
+            }
+
+            .pending-amount {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .bill-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+
+            .bill-actions {
+                flex-direction: column;
+            }
+
+            .history-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .history-amount {
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">💳</div>
+                <div class="logo-text">
+                    <h1>自费缴费</h1>
+                </div>
+            </div>
+            <a href="patient.html" class="back-button">← 返回患者端</a>
+        </div>
+    </header>
+
+    <main>
+        <h2 class="page-title">💳 自费缴费管理</h2>
+
+        <div class="payment-tabs">
+            <button class="tab-btn active" onclick="switchTab('pending')">待缴费</button>
+            <button class="tab-btn" onclick="switchTab('history')">缴费历史</button>
+            <button class="tab-btn" onclick="switchTab('deposit')">押金管理</button>
+            <button class="tab-btn" onclick="switchTab('invoice')">电子发票</button>
+        </div>
+
+        <!-- 待缴费 -->
+        <div id="tab-pending" class="tab-content">
+            <div class="content-section">
+                <div class="section-header">
+                    <h3>待缴费账单</h3>
+                    <span style="color: var(--text-secondary); font-size: 0.875rem;">共 2 笔待缴</span>
+                </div>
+
+                <div class="pending-amount">
+                    <span class="pending-label">待缴总额</span>
+                    <span class="pending-value">¥580.00</span>
+                </div>
+
+                <div class="bill-list">
+                    <div class="bill-item">
+                        <div class="bill-header">
+                            <span class="bill-title">体检中心 - 年度体检</span>
+                            <span class="bill-date">2025-11-15</span>
+                        </div>
+                        <div class="bill-details">
+                            <div class="detail-item">
+                                <div class="detail-label">体检费</div>
+                                <div class="detail-value">¥800.00</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">检查费</div>
+                                <div class="detail-value">¥250.00</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">优惠</div>
+                                <div class="detail-value" style="color: #10b981;">-¥150.00</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">应付</div>
+                                <div class="detail-value" style="color: #ef4444; font-size: 1.1rem;">¥900.00</div>
+                            </div>
+                        </div>
+                        <div class="bill-actions">
+                            <button class="btn btn-secondary">查看明细</button>
+                            <button class="btn btn-primary">立即支付</button>
+                        </div>
+                    </div>
+
+                    <div class="bill-item">
+                        <div class="bill-header">
+                            <span class="bill-title">内科门诊 - 药品费</span>
+                            <span class="bill-date">2025-12-10</span>
+                        </div>
+                        <div class="bill-details">
+                            <div class="detail-item">
+                                <div class="detail-label">药品费</div>
+                                <div class="detail-value">¥180.00</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">医保已报</div>
+                                <div class="detail-value" style="color: #10b981;">-¥126.00</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">自付比例</div>
+                                <div class="detail-value">30%</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">应付</div>
+                                <div class="detail-value" style="color: #ef4444; font-size: 1.1rem;">¥54.00</div>
+                            </div>
+                        </div>
+                        <div class="bill-actions">
+                            <button class="btn btn-secondary">查看明细</button>
+                            <button class="btn btn-primary">立即支付</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 缴费历史 -->
+        <div id="tab-history" class="tab-content" style="display: none;">
+            <div class="content-section">
+                <div class="section-header">
+                    <h3>缴费历史记录</h3>
+                    <span style="color: var(--text-secondary); font-size: 0.875rem;">近6个月</span>
+                </div>
+
+                <div class="history-item">
+                    <div class="history-info">
+                        <h4>心内科门诊 - 检查费</h4>
+                        <p>2025-10-22 14:30 | 支付方式：微信支付</p>
+                    </div>
+                    <div class="history-amount">
+                        <div class="amount">¥135.00</div>
+                        <div class="status">支付成功</div>
+                    </div>
+                </div>
+
+                <div class="history-item">
+                    <div class="history-info">
+                        <h4>口腔科 - 洗牙服务</h4>
+                        <p>2025-09-15 09:00 | 支付方式：支付宝</p>
+                    </div>
+                    <div class="history-amount">
+                        <div class="amount">¥280.00</div>
+                        <div class="status">支付成功</div>
+                    </div>
+                </div>
+
+                <div class="history-item">
+                    <div class="history-info">
+                        <h4>眼科 - 验光配镜</h4>
+                        <p>2025-08-20 16:00 | 支付方式：银行卡</p>
+                    </div>
+                    <div class="history-amount">
+                        <div class="amount">¥560.00</div>
+                        <div class="status">支付成功</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 押金管理 -->
+        <div id="tab-deposit" class="tab-content" style="display: none;">
+            <div class="content-section">
+                <div class="section-header">
+                    <h3>住院押金管理</h3>
+                </div>
+                <p style="text-align: center; color: var(--text-secondary); padding: 3rem;">
+                    当前无住院押金记录
+                </p>
+            </div>
+        </div>
+
+        <!-- 电子发票 -->
+        <div id="tab-invoice" class="tab-content" style="display: none;">
+            <div class="content-section">
+                <div class="section-header">
+                    <h3>电子发票</h3>
+                    <button class="btn btn-primary">申请开票</button>
+                </div>
+                <p style="text-align: center; color: var(--text-secondary); padding: 3rem;">
+                    请选择缴费记录申请开具电子发票
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function switchTab(tabName) {
+            // 隐藏所有标签内容
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            
+            // 显示选中的标签内容
+            document.getElementById('tab-' + tabName).style.display = 'block';
+            
+            // 更新按钮样式
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>

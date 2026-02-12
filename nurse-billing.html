@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>收费管理 - 护士端</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-bg: #0a0e27;
+            --secondary-bg: #1a1f3a;
+            --accent-color: #a855f7;
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        header {
+            background: rgba(26, 31, 58, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--accent-color), #9333ea);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .logo-text h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+
+        .back-button {
+            padding: 0.75rem 1.5rem;
+            background: rgba(168, 85, 247, 0.1);
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .back-button:hover {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-title {
+            font-size: 1.75rem;
+            color: var(--accent-color);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .billing-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid rgba(168, 85, 247, 0.2);
+            padding-bottom: 1rem;
+        }
+
+        .tab-btn {
+            padding: 1rem 2rem;
+            background: rgba(168, 85, 247, 0.1);
+            border: 2px solid var(--accent-color);
+            border-radius: 12px;
+            color: var(--accent-color);
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .content-section {
+            background: rgba(26, 31, 58, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 2px solid rgba(168, 85, 247, 0.2);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(168, 85, 247, 0.2);
+        }
+
+        .section-header h3 {
+            font-size: 1.25rem;
+            color: var(--accent-color);
+        }
+
+        .search-box {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 0.875rem 1rem;
+            background: var(--secondary-bg);
+            border: 2px solid rgba(168, 85, 247, 0.3);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+
+        .search-btn {
+            padding: 0.875rem 1.5rem;
+            background: var(--accent-color);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .billing-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .billing-item {
+            background: rgba(10, 14, 39, 0.5);
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid rgba(168, 85, 247, 0.1);
+            transition: all 0.3s;
+        }
+
+        .billing-item:hover {
+            border-color: var(--accent-color);
+            transform: translateX(5px);
+        }
+
+        .billing-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .patient-info-billing {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .bed-number {
+            width: 50px;
+            height: 50px;
+            background: rgba(168, 85, 247, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: var(--accent-color);
+        }
+
+        .patient-details h4 {
+            font-size: 1.125rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .patient-details p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .billing-type {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .billing-type.self {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+
+        .billing-type.insurance {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .billing-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: rgba(26, 31, 58, 0.6);
+            border-radius: 10px;
+        }
+
+        .detail-item {
+            text-align: center;
+        }
+
+        .detail-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+        }
+
+        .detail-value {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .detail-value.amount {
+            color: var(--accent-color);
+            font-size: 1.25rem;
+        }
+
+        .billing-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #9333ea;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: rgba(168, 85, 247, 0.1);
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-box {
+            background: rgba(26, 31, 58, 0.6);
+            padding: 1.5rem;
+            border-radius: 16px;
+            text-align: center;
+            border: 2px solid rgba(168, 85, 247, 0.2);
+        }
+
+        .stat-box-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-box-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .billing-tabs {
+                overflow-x: auto;
+                flex-wrap: nowrap;
+            }
+
+            .billing-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .billing-details {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .billing-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">💰</div>
+                <div class="logo-text">
+                    <h1>收费管理</h1>
+                </div>
+            </div>
+            <a href="nurse.html" class="back-button">← 返回护士端</a>
+        </div>
+    </header>
+
+    <main>
+        <h2 class="page-title">💰 收费管理系统</h2>
+
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-box-value">¥28,560</div>
+                <div class="stat-box-label">今日收费总额</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-box-value">12</div>
+                <div class="stat-box-label">自费结算</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-box-value">8</div>
+                <div class="stat-box-label">医保结算</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-box-value">5</div>
+                <div class="stat-box-label">待处理</div>
+            </div>
+        </div>
+
+        <div class="billing-tabs">
+            <button class="tab-btn active" onclick="switchTab('self')">💳 自费结算</button>
+            <button class="tab-btn" onclick="switchTab('insurance')">🏥 医保结算</button>
+            <button class="tab-btn" onclick="switchTab('deposit')">💵 押金管理</button>
+            <button class="tab-btn" onclick="switchTab('query')">🔍 费用查询</button>
+        </div>
+
+        <!-- 自费结算 -->
+        <div id="tab-self" class="tab-content">
+            <div class="content-section">
+                <div class="section-header">
+                    <h3>待结算患者（自费）</h3>
+                    <span style="color: var(--text-secondary); font-size: 0.875rem;">共 5 人等待结算</span>
+                </div>
+                
+                <div class="search-box">
+                    <input type="text" class="search-input" placeholder="输入住院号、姓名或床号搜索...">
+                    <button class="search-btn">搜索</button>
+                </div>
+
+                <div class="billing-list">
+                    <div class="billing-item">
+                        <div class="billing-header">
+                            <div class="patient-info-billing">
+                                <div class="bed-number">301</div>
+                                <div class="patient-details">
+                                    <h4>李明</h4>
+                                    <p>男 | 45岁 | 住院号：202402001</p>
+                                </div>
+                            </div>
+                            <span class="billing-type self">自费</span>
+                        </div>
+                        <div class="billing-details">
+                            <div class="detail-item">
+                                <div class="detail-label">住院天数</div>
+                                <div class="detail-value">7天</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">药品费用</div>
+                                <div class="detail-value">¥3,250</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">检查费用</div>
+                                <div class="detail-value">¥1,800</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">护理费用</div>
+                                <div class="detail-value">¥980</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">押金</div>
+                                <div class="detail-value">¥5,000</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">应退/补</div>
+                                <div class="detail-value amount">-¥1,030</div>
+                            </div>
+                        </div>
+                        <div class="billing-actions">
+                            <button class="btn btn-secondary">查看明细</button>
+                            <button class="btn btn-primary">立即结算</button>
+                        </div>
+                    </div>
+
+                    <div class="billing-item">
+                        <div class="billing-header">
+                            <div class="patient-info-billing">
+                                <div class="bed-number">305</div>
+                                <div class="patient-details">
+                                    <h4>王芳</h4>
+                                    <p>女 | 32岁 | 住院号：202402005</p>
+                                </div>
+                            </div>
+                            <span class="billing-type self">自费</span>
+                        </div>
+                        <div class="billing-details">
+                            <div class="detail-item">
+                                <div class="detail-label">住院天数</div>
+                                <div class="detail-value">3天</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">药品费用</div>
+                                <div class="detail-value">¥1,560</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">检查费用</div>
+                                <div class="detail-value">¥890</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">护理费用</div>
+                                <div class="detail-value">¥420</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">押金</div>
+                                <div class="detail-value">¥3,000</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">应退/补</div>
+                                <div class="detail-value amount" style="color: #ef4444;">+¥130</div>
+                            </div>
+                        </div>
+                        <div class="billing-actions">
+                            <button class="btn btn-secondary">查看明细</button>
+                            <button class="btn btn-primary">立即结算</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 医保结算 -->
+        <div id="tab-insurance" class="tab-content" style="display: none;">
+            <div class="content-section">
+                <div class="section-header">
+                    <h3>医保结算审核</h3>
+                    <span style="color: var(--text-secondary); font-size: 0.875rem;">待审核 3 人</span>
+                </div>
+                
+                <div class="billing-list">
+                    <div class="billing-item">
+                        <div class="billing-header">
+                            <div class="patient-info-billing">
+                                <div class="bed-number">302</div>
+                                <div class="patient-details">
+                                    <h4>张建国</h4>
+                                    <p>男 | 68岁 | 住院号：202402002 | 医保卡：110***********1234</p>
+                                </div>
+                            </div>
+                            <span class="billing-type insurance">城镇职工医保</span>
+                        </div>
+                        <div class="billing-details">
+                            <div class="detail-item">
+                                <div class="detail-label">总费用</div>
+                                <div class="detail-value">¥15,680</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">医保报销</div>
+                                <div class="detail-value" style="color: #10b981;">¥11,760</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">个人自付</div>
+                                <div class="detail-value" style="color: #f59e0b;">¥2,936</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">起付线</div>
+                                <div class="detail-value">¥984</div>
+                            </div>
+                        </div>
+                        <div class="billing-actions">
+                            <button class="btn btn-secondary">医保预审</button>
+                            <button class="btn btn-primary">确认结算</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 押金管理 -->
+        <div id="tab-deposit" class="tab-content" style="display: none;">
+            <div class="content-section">
+                <div class="section-header">
+                    <h3>押金管理</h3>
+                    <button class="btn btn-primary">+ 收取押金</button>
+                </div>
+                <div class="billing-list">
+                    <div class="billing-item">
+                        <div class="billing-header">
+                            <div class="patient-info-billing">
+                                <div class="bed-number">308</div>
+                                <div class="patient-details">
+                                    <h4>刘洋</h4>
+                                    <p>男 | 28岁 | 住院号：202402008</p>
+                                </div>
+                            </div>
+                            <span class="billing-type self">押金不足</span>
+                        </div>
+                        <div class="billing-details">
+                            <div class="detail-item">
+                                <div class="detail-label">已交押金</div>
+                                <div class="detail-value">¥2,000</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">已用金额</div>
+                                <div class="detail-value" style="color: #ef4444;">¥2,450</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">需补交</div>
+                                <div class="detail-value amount" style="color: #ef4444;">¥450</div>
+                            </div>
+                        </div>
+                        <div class="billing-actions">
+                            <button class="btn btn-secondary">费用明细</button>
+                            <button class="btn btn-primary">补收押金</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 费用查询 -->
+        <div id="tab-query" class="tab-content" style="display: none;">
+            <div class="content-section">
+                <div class="section-header">
+                    <h3>费用明细查询</h3>
+                </div>
+                <div class="search-box">
+                    <input type="text" class="search-input" placeholder="输入住院号或姓名查询历史费用...">
+                    <button class="search-btn">查询</button>
+                </div>
+                <p style="text-align: center; color: var(--text-secondary); padding: 3rem;">
+                    请输入查询条件搜索患者费用记录
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function switchTab(tabName) {
+            // 隐藏所有标签内容
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            
+            // 显示选中的标签内容
+            document.getElementById('tab-' + tabName).style.display = 'block';
+            
+            // 更新按钮样式
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>

@@ -322,6 +322,69 @@
             font-weight: 600;
         }
 
+        /* 患者信息端口入口样式 */
+        .portal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .portal-card {
+            background: rgba(10, 14, 39, 0.5);
+            border: 2px solid rgba(16, 185, 129, 0.3);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+        .portal-card:hover {
+            border-color: var(--accent-color);
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(16, 185, 129, 0.2);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .portal-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.1));
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            margin: 0 auto 1.5rem;
+            border: 2px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .portal-card h4 {
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+            color: var(--accent-color);
+        }
+
+        .portal-card p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .portal-badge {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--accent-color);
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
         @media (max-width: 768px) {
             .header-content {
                 flex-direction: column;
@@ -338,6 +401,10 @@
             }
 
             .quick-actions {
+                grid-template-columns: 1fr;
+            }
+
+            .portal-grid {
                 grid-template-columns: 1fr;
             }
         }
@@ -368,10 +435,11 @@
             <h2>你好，李医生</h2>
             <p>今日工作：门诊8人，住院患者管理12人</p>
         </section>
+        
         <div class="dashboard-grid">
             <div class="stat-card">
                 <div class="stat-icon">📋</div>
-                <a href="doctor’s appointment today.html" style="text-decoration:none;"><h3>今日看诊信息</h3></a>
+                <a href="doctor's appointment today.html" style="text-decoration:none;"><h3>今日看诊信息</h3></a>
                 <p>今日已记录 12 次</p>
             </div>
             <div class="stat-card">
@@ -379,26 +447,49 @@
                 <a href="bingli.html" style="text-decoration:none;"><h3>医生病历讨论</h3></a>
                 <p>3 位患者需重点监护</p>
             </div>
-        </div>
             <div class="stat-card">
                 <div class="stat-icon">🛏</div>
                 <a href="doctor tianjia.html" style="text-decoration:none;"><h3>添加患者</h3></a>
+                <p>快速录入新患者信息</p>
             </div>
         </div>
 
-
-
-
-
-
-
-
-
-        <!-- <div class="dashboard-grid">
-            <div class="stat-card">
-                <div class="stat-icon">👥</div>
-                <h3>今日门诊</h3>
-                <p>预约患者 8 人</p>
+        <!-- 患者信息端口入口 -->
+        <section class="content-section">
+            <div class="section-header">
+                <h3>👤 患者信息</h3>
+                <span style="color: var(--text-secondary); font-size: 0.875rem;">选择功能模块进入详细管理</span>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon">🛏 -->
+            
+            <div class="portal-grid">
+                <a href="doctor-orders.html" class="portal-card">
+                    <div class="portal-icon">📋</div>
+                    <h4>医嘱管理</h4>
+                    <p>管理长期医嘱与临时医嘱<br>查看执行状态与开立新医嘱</p>
+                    <span class="portal-badge">进入管理 →</span>
+                </a>
+
+                <a href="doctor-records.html" class="portal-card">
+                    <div class="portal-icon">📄</div>
+                    <h4>病历信息</h4>
+                    <p>查看现有病历记录<br>添加新病程记录与查房记录</p>
+                    <span class="portal-badge">进入管理 →</span>
+                </a>
+
+                <a href="doctor-exams.html" class="portal-card">
+                    <div class="portal-icon">🔬</div>
+                    <h4>检查记录</h4>
+                    <p>查看检验报告与影像结果<br>申请新的检查项目</p>
+                    <span class="portal-badge">进入管理 →</span>
+                </a>
+
+                <a href="doctor-prescriptions.html" class="portal-card">
+                    <div class="portal-icon">💊</div>
+                    <h4>患者处方</h4>
+                    <p>管理西药与中药处方<br>开立新处方与打印医嘱</p>
+                    <span class="portal-badge">进入管理 →</span>
+                </a>
+            </div>
+        </section>
+
+
