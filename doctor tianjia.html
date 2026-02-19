@@ -23,6 +23,9 @@
     .row label{width:70px;font-size:13px;line-height:30px}
     .row input,.row select{flex:1;padding:6px 8px;border:1px solid #d9d9d9;border-radius:4px}
     .save-btn{background:#52c41a;color:#fff;border:none;padding:8px 20px;border-radius:4px;cursor:pointer}
+    .search-box{margin-bottom:10px;padding:8px;border:1px solid #d9d9d9;border-radius:4px;width:100%}
+    .status-bar{font-size:12px;color:#666;padding:8px;border-top:1px solid #e8e8e8}
+    .delete-btn{background:#ff4d4f;color:#fff;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;float:right;font-size:12px}
   </style>
 </head>
 <body>
@@ -32,14 +35,21 @@
   <div class="top-bar">
     <button class="add-btn" onclick="addNewPat()">+ 新增患者</button>
   </div>
-  <div class="pat-list" id="patList"></div>
+  <div class="pat-list" id="patList">
+    <input type="text" class="search-box" id="searchInput" placeholder="搜索患者姓名/住院号..." onkeyup="searchPatients()">
+  </div>
+  <div class="status-bar" id="statusBar">
+    共 <span id="totalCount">0</span> 位患者
+  </div>
 </aside>
 
 <!-- 右侧录入区 -->
 <main class="right">
   <!-- 基本信息 -->
   <section class="section">
-    <h3>基本信息</h3>
+    <h3>基本信息 
+      <button class="delete-btn" onclick="deleteCurrentPat()" id="deleteBtn" style="display:none">删除患者</button>
+    </h3>
     <div class="row">
       <label>姓名</label><input id="p-name" placeholder="请输入姓名">
     </div>
@@ -55,6 +65,9 @@
     </div>
     <div class="row">
       <label>床号</label><input id="p-bed" placeholder="例 12A">
+    </div>
+    <div class="row">
+      <label>入院日期</label><input id="p-admitDate" type="date">
     </div>
   </section>
 
@@ -78,79 +91,336 @@
     </div>
   </section>
 
-  <button class="save-btn" onclick="savePat()">保存</button>
+  <!-- 备注信息 -->
+  <section class="section">
+    <h3>备注</h3>
+    <textarea id="p-notes" style="width:100%;height:40px;border:1px solid #d9d9d9;border-radius:4px;padding:6px" placeholder="其他备注信息"></textarea>
+  </section>
+
+  <div style="display:flex;gap:10px">
+    <button class="save-btn" onclick="savePat()">保存</button>
+    <button class="save-btn" style="background:#faad14" onclick="exportData()">导出数据</button>
+    <button class="save-btn" style="background:#722ed1" onclick="importData()">导入数据</button>
+  </div>
 </main>
 
 <script>
-/* ------------ 数据层 ------------ */
+/* ------------ 数据层增强版 ------------ */
 const STORE_KEY = 'doctor_patients';
-let patients = JSON.parse(localStorage.getItem(STORE_KEY)) || [];
-let currentId = null;   // 当前正在编辑的患者ID
+const BACKUP_KEY = 'doctor_patients_backup';
+let patients = [];
+let currentId = null;
+let searchTerm = '';
+
+// 初始化：从localStorage加载数据
+function loadFromStorage() {
+    try {
+        const saved = localStorage.getItem(STORE_KEY);
+        if (saved) {
+            patients = JSON.parse(saved);
+        } else {
+            // 尝试从备份恢复
+            const backup = localStorage.getItem(BACKUP_KEY);
+            if (backup) {
+                patients = JSON.parse(backup);
+                saveToStorage();
+            } else {
+                // 添加示例数据
+                patients = [
+                    {
+                        id: Date.now().toString(),
+                        name: '张三',
+                        gender: '男',
+                        age: '45',
+                        hospno: '00123456',
+                        bed: '12A',
+                        admitDate: '2024-01-15',
+                        diag: '高血压',
+                        drug: '硝苯地平 30mg bid',
+                        lab: '血常规',
+                        exam: '心电图',
+                        notes: '复诊患者',
+                        createTime: new Date().toISOString()
+                    }
+                ];
+            }
+        }
+    } catch (e) {
+        console.error('加载数据失败:', e);
+        patients = [];
+    }
+    updateStatusBar();
+}
+
+// 保存到localStorage
+function saveToStorage() {
+    try {
+        localStorage.setItem(STORE_KEY, JSON.stringify(patients));
+        // 自动备份
+        localStorage.setItem(BACKUP_KEY, JSON.stringify(patients));
+        updateStatusBar();
+    } catch (e) {
+        if (e.name === 'QuotaExceededError') {
+            alert('存储空间不足，请删除一些旧数据');
+            // 自动清理最旧的20%数据
+            const removeCount = Math.ceil(patients.length * 0.2);
+            patients = patients.slice(removeCount);
+            localStorage.setItem(STORE_KEY, JSON.stringify(patients));
+        }
+    }
+}
+
+// 更新状态栏
+function updateStatusBar() {
+    document.getElementById('totalCount').textContent = patients.length;
+    const lastUpdate = localStorage.getItem('last_update_time');
+    if (lastUpdate) {
+        document.getElementById('statusBar').innerHTML = `共 ${patients.length} 位患者 | 上次更新: ${new Date(lastUpdate).toLocaleTimeString()}`;
+    }
+}
+
+// 搜索患者
+function searchPatients() {
+    searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    renderList();
+}
+
+// 获取过滤后的患者列表
+function getFilteredPatients() {
+    if (!searchTerm) return patients;
+    return patients.filter(p => 
+        p.name.toLowerCase().includes(searchTerm) ||
+        p.hospno.toLowerCase().includes(searchTerm) ||
+        (p.diag && p.diag.toLowerCase().includes(searchTerm))
+    );
+}
 
 /* 初始化：渲染列表 + 默认选中第一个 */
-function init(){
-  renderList();
-  if(patients.length) selectPat(patients[0].id);
-  else addNewPat();
+function init() {
+    loadFromStorage();
+    renderList();
+    if (patients.length) {
+        selectPat(patients[0].id);
+        document.getElementById('deleteBtn').style.display = 'inline-block';
+    } else {
+        addNewPat();
+    }
+    
+    // 自动保存草稿
+    setInterval(autoSaveDraft, 30000); // 每30秒自动保存
 }
-init();
 
 /* 新增患者 */
-function addNewPat(){
-  const id = Date.now().toString();
-  patients.unshift({id, name:'新患者', gender:'男', age:'', hospno:'', bed:'', diag:'', drug:'', lab:'', exam:''});
-  localStorage.setItem(STORE_KEY, JSON.stringify(patients));
-  renderList();
-  selectPat(id);
+function addNewPat() {
+    const id = 'pat_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    const newPatient = {
+        id, 
+        name: '新患者', 
+        gender: '男', 
+        age: '', 
+        hospno: '', 
+        bed: '', 
+        admitDate: new Date().toISOString().split('T')[0],
+        diag: '', 
+        drug: '', 
+        lab: '', 
+        exam: '',
+        notes: '',
+        createTime: new Date().toISOString(),
+        lastModified: new Date().toISOString()
+    };
+    
+    patients.unshift(newPatient);
+    saveToStorage();
+    localStorage.setItem('last_update_time', new Date().toISOString());
+    renderList();
+    selectPat(id);
+    document.getElementById('deleteBtn').style.display = 'inline-block';
 }
 
 /* 选中患者并回填表单 */
-function selectPat(id){
-  currentId = id;
-  const p = patients.find(v=>v.id===id);
-  if(!p) return;
-  document.getElementById('p-name').value  = p.name;
-  document.getElementById('p-gender').value= p.gender;
-  document.getElementById('p-age').value   = p.age;
-  document.getElementById('p-hospno').value= p.hospno;
-  document.getElementById('p-bed').value   = p.bed;
-  document.getElementById('p-diag').value  = p.diag;
-  document.getElementById('o-drug').value  = p.drug;
-  document.getElementById('o-lab').value   = p.lab;
-  document.getElementById('o-exam').value  = p.exam;
-  /* 高亮当前行 */
-  document.querySelectorAll('.pat-item').forEach(el=>el.classList.remove('active'));
-  document.querySelector(`[data-id="${id}"]`)?.classList.add('active');
+function selectPat(id) {
+    currentId = id;
+    const p = patients.find(v => v.id === id);
+    if (!p) return;
+    
+    document.getElementById('p-name').value = p.name || '';
+    document.getElementById('p-gender').value = p.gender || '男';
+    document.getElementById('p-age').value = p.age || '';
+    document.getElementById('p-hospno').value = p.hospno || '';
+    document.getElementById('p-bed').value = p.bed || '';
+    document.getElementById('p-admitDate').value = p.admitDate || '';
+    document.getElementById('p-diag').value = p.diag || '';
+    document.getElementById('o-drug').value = p.drug || '';
+    document.getElementById('o-lab').value = p.lab || '';
+    document.getElementById('o-exam').value = p.exam || '';
+    document.getElementById('p-notes').value = p.notes || '';
+    
+    /* 高亮当前行 */
+    document.querySelectorAll('.pat-item').forEach(el => el.classList.remove('active'));
+    document.querySelector(`[data-id="${id}"]`)?.classList.add('active');
+    document.getElementById('deleteBtn').style.display = 'inline-block';
 }
 
-/* 保存（先写本地） */
-function savePat(){
-  const p = patients.find(v=>v.id===currentId);
-  if(!p) return;
-  p.name   = document.getElementById('p-name').value.trim();
-  p.gender = document.getElementById('p-gender').value;
-  p.age    = document.getElementById('p-age').value.trim();
-  p.hospno = document.getElementById('p-hospno').value.trim();
-  p.bed    = document.getElementById('p-bed').value.trim();
-  p.diag   = document.getElementById('p-diag').value.trim();
-  p.drug   = document.getElementById('o-drug').value.trim();
-  p.lab    = document.getElementById('o-lab').value.trim();
-  p.exam   = document.getElementById('o-exam').value.trim();
-  localStorage.setItem(STORE_KEY, JSON.stringify(patients));
-  renderList();
-  alert('已保存！');
+/* 保存患者信息 */
+function savePat() {
+    const p = patients.find(v => v.id === currentId);
+    if (!p) return;
+    
+    // 验证必填字段
+    if (!document.getElementById('p-name').value.trim()) {
+        alert('请输入患者姓名');
+        return;
+    }
+    
+    p.name = document.getElementById('p-name').value.trim();
+    p.gender = document.getElementById('p-gender').value;
+    p.age = document.getElementById('p-age').value.trim();
+    p.hospno = document.getElementById('p-hospno').value.trim();
+    p.bed = document.getElementById('p-bed').value.trim();
+    p.admitDate = document.getElementById('p-admitDate').value;
+    p.diag = document.getElementById('p-diag').value.trim();
+    p.drug = document.getElementById('o-drug').value.trim();
+    p.lab = document.getElementById('o-lab').value.trim();
+    p.exam = document.getElementById('o-exam').value.trim();
+    p.notes = document.getElementById('p-notes').value.trim();
+    p.lastModified = new Date().toISOString();
+    
+    saveToStorage();
+    localStorage.setItem('last_update_time', new Date().toISOString());
+    renderList();
+    
+    // 显示保存成功提示
+    showMessage('保存成功！', 'success');
+}
+
+// 自动保存草稿
+function autoSaveDraft() {
+    if (currentId && document.getElementById('p-name').value) {
+        const p = patients.find(v => v.id === currentId);
+        if (p) {
+            p.draft = {
+                name: document.getElementById('p-name').value,
+                diag: document.getElementById('p-diag').value,
+                lastModified: new Date().toISOString()
+            };
+            localStorage.setItem(STORE_KEY + '_draft_' + currentId, JSON.stringify(p.draft));
+        }
+    }
+}
+
+// 显示消息提示
+function showMessage(msg, type) {
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 10px 20px;
+        background: ${type === 'success' ? '#52c41a' : '#ff4d4f'};
+        color: white;
+        border-radius: 4px;
+        z-index: 9999;
+    `;
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2000);
+}
+
+/* 删除当前患者 */
+function deleteCurrentPat() {
+    if (!currentId) return;
+    
+    if (confirm('确定要删除这位患者吗？此操作不可恢复！')) {
+        patients = patients.filter(p => p.id !== currentId);
+        saveToStorage();
+        
+        if (patients.length) {
+            selectPat(patients[0].id);
+        } else {
+            addNewPat();
+            document.getElementById('deleteBtn').style.display = 'none';
+        }
+        
+        renderList();
+        showMessage('删除成功', 'success');
+    }
+}
+
+/* 导出数据 */
+function exportData() {
+    const dataStr = JSON.stringify(patients, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `patients_backup_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showMessage('数据导出成功', 'success');
+}
+
+/* 导入数据 */
+function importData() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    
+    input.onchange = (e) => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        
+        reader.onload = (event) => {
+            try {
+                const importedData = JSON.parse(event.target.result);
+                if (Array.isArray(importedData)) {
+                    if (confirm(`将导入 ${importedData.length} 条记录，是否继续？`)) {
+                        patients = importedData;
+                        saveToStorage();
+                        renderList();
+                        if (patients.length) selectPat(patients[0].id);
+                        showMessage('数据导入成功', 'success');
+                    }
+                } else {
+                    alert('无效的数据格式');
+                }
+            } catch (err) {
+                alert('文件解析失败：' + err.message);
+            }
+        };
+        
+        reader.readAsText(file);
+    };
+    
+    input.click();
 }
 
 /* 渲染左侧列表 */
-function renderList(){
-  const box = document.getElementById('patList');
-  box.innerHTML = patients.map(p=>`
-    <div class="pat-item ${p.id===currentId?'active':''}" data-id="${p.id}" onclick="selectPat('${p.id}')">
-      <div style="font-size:13px;font-weight:bold">${p.name} (${p.gender} ${p.age}岁)</div>
-      <div style="font-size:12px;color:#666">${p.bed} | ${p.hospno}</div>
-    </div>`).join('');
+function renderList() {
+    const box = document.getElementById('patList');
+    const filtered = getFilteredPatients();
+    
+    // 保留搜索框
+    const searchHTML = '<input type="text" class="search-box" id="searchInput" placeholder="搜索患者姓名/住院号..." onkeyup="searchPatients()" value="' + searchTerm + '">';
+    
+    box.innerHTML = searchHTML + filtered.map(p => `
+        <div class="pat-item ${p.id === currentId ? 'active' : ''}" data-id="${p.id}" onclick="selectPat('${p.id}')">
+            <div style="font-size:13px;font-weight:bold">
+                ${p.name} (${p.gender || '?'} ${p.age || '?'}岁)
+                ${p.lastModified ? '<span style="color:#999;font-size:10px;margin-left:5px">✓</span>' : ''}
+            </div>
+            <div style="font-size:12px;color:#666">
+                床号:${p.bed || '--'} | 住院号:${p.hospno || '--'}
+            </div>
+            ${p.diag ? `<div style="font-size:11px;color:#1890ff">诊断:${p.diag.substring(0,10)}${p.diag.length>10?'...':''}</div>` : ''}
+        </div>
+    `).join('');
+    
+    updateStatusBar();
 }
+
+// 启动应用
+init();
 </script>
 </body>
 </html>
-

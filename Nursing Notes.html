@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>护理记录 - 护士端</title>
     <style>
+        /* 样式保持不变，使用原文件中的样式 */
         * {
             margin: 0;
             padding: 0;
@@ -525,6 +526,28 @@
             margin-top: 2rem;
         }
 
+        .sync-indicator {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .sync-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
         @media (max-width: 768px) {
             .header-content {
                 flex-direction: column;
@@ -601,7 +624,12 @@
     <main>
         <section class="page-header">
             <h2>护理记录管理</h2>
-            <p>今日已记录 12 条护理记录，3 条待补充记录</p>
+            <p>
+                <span class="sync-indicator">
+                    <span class="sync-dot"></span>
+                    数据源: 护士工作站 | 今日已记录 <span id="todayCount">0</span> 条记录
+                </span>
+            </p>
         </section>
 
         <div class="quick-actions">
@@ -642,20 +670,12 @@
                 <div class="filter-label">患者筛选</div>
                 <select class="filter-select" id="patientFilter">
                     <option value="all">全部患者</option>
-                    <option value="301">301床 - 李明</option>
-                    <option value="302">302床 - 王芳</option>
-                    <option value="303">303床 - 赵强</option>
-                    <option value="304">304床 - 张伟</option>
                 </select>
             </div>
             <div class="filter-group">
                 <div class="filter-label">护士筛选</div>
                 <select class="filter-select" id="nurseFilter">
                     <option value="all">全部护士</option>
-                    <option value="wang">王护士</option>
-                    <option value="li">李护士</option>
-                    <option value="zhang">张护士</option>
-                    <option value="zhao">赵护士</option>
                 </select>
             </div>
             <div class="filter-group">
@@ -672,9 +692,9 @@
             <div class="section-header">
                 <h3>护理记录列表</h3>
                 <div class="action-buttons">
-                    <button class="action-button" onclick="exportRecords()">导出记录</button>
-                    <button class="action-button" onclick="printRecords()">打印记录</button>
-                    <button class="action-button" onclick="refreshRecords()">刷新列表</button>
+                    <button class="action-button" onclick="exportRecords()">📤 导出记录</button>
+                    <button class="action-button" onclick="printRecords()">🖨️ 打印记录</button>
+                    <button class="action-button" onclick="refreshRecords()">🔄 刷新列表</button>
                 </div>
             </div>
 
@@ -696,10 +716,6 @@
                     <label class="form-label">患者选择</label>
                     <select class="form-select" id="recordPatient" required>
                         <option value="">选择患者</option>
-                        <option value="301">301床 - 李明 (65岁，慢性阻塞性肺病)</option>
-                        <option value="302">302床 - 王芳 (58岁，高血压)</option>
-                        <option value="303">303床 - 赵强 (42岁，糖尿病)</option>
-                        <option value="304">304床 - 张伟 (71岁，冠心病)</option>
                     </select>
                 </div>
 
@@ -756,128 +772,224 @@
         </div>
     </div>
 
+    <!-- 编辑记录模态框 -->
+    <div class="modal" id="editRecordModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>编辑护理记录</h3>
+                <button class="close-modal" onclick="closeEditModal()">×</button>
+            </div>
+            <form id="editRecordForm">
+                <input type="hidden" id="editRecordId">
+                <div class="form-group">
+                    <label class="form-label">患者信息</label>
+                    <input type="text" class="form-input" id="editPatientInfo" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">记录类型</label>
+                    <select class="form-select" id="editRecordType" required>
+                        <option value="routine">常规护理</option>
+                        <option value="special">特殊护理</option>
+                        <option value="critical">危重护理</option>
+                        <option value="discharge">出院指导</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">生命体征</label>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                        <input type="text" class="form-input" placeholder="体温(℃)" id="editVitalTemp">
+                        <input type="text" class="form-input" placeholder="脉搏(次/分)" id="editVitalPulse">
+                        <input type="text" class="form-input" placeholder="呼吸(次/分)" id="editVitalResp">
+                        <input type="text" class="form-input" placeholder="血压(mmHg)" id="editVitalBP">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">护理内容</label>
+                    <textarea class="form-textarea" id="editRecordContent" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">特殊情况记录</label>
+                    <textarea class="form-textarea" id="editSpecialNotes"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">护理措施</label>
+                    <textarea class="form-textarea" id="editNursingMeasures" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">下次护理计划</label>
+                    <textarea class="form-textarea" id="editNextPlan"></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="action-button" onclick="closeEditModal()">取消</button>
+                    <button type="submit" class="action-button">更新记录</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 详情查看模态框 -->
+    <div class="modal" id="viewRecordModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>护理记录详情</h3>
+                <button class="close-modal" onclick="closeViewModal()">×</button>
+            </div>
+            <div id="viewRecordDetails" style="line-height: 2;">
+                <!-- 详情内容动态加载 -->
+            </div>
+        </div>
+    </div>
+
     <script>
-        // 模拟护理记录数据
-        const recordsData = [
-            {
-                id: "NR001",
-                patientName: "李明",
-                bedNo: "301",
-                age: 65,
-                diagnosis: "慢性阻塞性肺病伴急性加重",
-                recordType: "routine",
-                recordTime: "2025-12-13 08:30",
-                nurseName: "王护士",
-                vitalSigns: {
-                    temperature: "36.8℃",
-                    pulse: "88次/分",
-                    respiration: "20次/分",
-                    bloodPressure: "135/85mmHg"
-                },
-                content: "患者夜间休息良好，晨起精神状态可。主诉轻度咳嗽，无痰。呼吸平稳，无胸闷气促表现。",
-                nursingMeasures: "1. 协助患者完成晨间护理\n2. 指导患者有效咳嗽排痰方法\n3. 监测生命体征变化\n4. 给予氧气吸入（2L/min）",
-                specialNotes: "注意观察呼吸频率和血氧饱和度变化",
-                nextPlan: "15:00再次监测生命体征，继续观察咳嗽情况"
-            },
-            {
-                id: "NR002",
-                patientName: "王芳",
-                bedNo: "302",
-                age: 58,
-                diagnosis: "高血压病Ⅲ期",
-                recordType: "special",
-                recordTime: "2025-12-13 09:15",
-                nurseName: "李护士",
-                vitalSigns: {
-                    temperature: "36.5℃",
-                    pulse: "76次/分",
-                    respiration: "18次/分",
-                    bloodPressure: "150/95mmHg"
-                },
-                content: "患者主诉轻微头晕，血压较前升高。遵医嘱给予降压药物口服，嘱卧床休息。",
-                nursingMeasures: "1. 测量血压并记录\n2. 给予硝苯地平控释片口服\n3. 指导卧床休息\n4. 心理安慰，减轻紧张情绪",
-                specialNotes: "血压控制不佳，需密切监测",
-                nextPlan: "1小时后复测血压，如仍高及时报告医生"
-            },
-            {
-                id: "NR003",
-                patientName: "赵强",
-                bedNo: "303",
-                age: 42,
-                diagnosis: "2型糖尿病",
-                recordType: "routine",
-                recordTime: "2025-12-13 10:00",
-                nurseName: "王护士",
-                vitalSigns: {
-                    temperature: "36.7℃",
-                    pulse: "82次/分",
-                    respiration: "19次/分",
-                    bloodPressure: "128/78mmHg"
-                },
-                content: "患者早餐后血糖监测7.8mmol/L。右下肢伤口愈合良好，无红肿渗液。",
-                nursingMeasures: "1. 监测早餐后2小时血糖\n2. 检查并更换伤口敷料\n3. 指导糖尿病饮食\n4. 观察胰岛素注射部位",
-                specialNotes: "注意血糖波动情况",
-                nextPlan: "午餐前监测血糖，观察伤口愈合情况"
-            },
-            {
-                id: "NR004",
-                patientName: "张伟",
-                bedNo: "304",
-                age: 71,
-                diagnosis: "冠心病、心功能Ⅱ级",
-                recordType: "critical",
-                recordTime: "2025-12-13 11:30",
-                nurseName: "张护士",
-                vitalSigns: {
-                    temperature: "36.9℃",
-                    pulse: "92次/分",
-                    respiration: "22次/分",
-                    bloodPressure: "145/90mmHg"
-                },
-                content: "患者主诉胸闷不适，心电图显示ST段轻度压低。遵医嘱给予硝酸甘油舌下含服。",
-                nursingMeasures: "1. 立即监测心电图\n2. 给予硝酸甘油0.5mg舌下含服\n3. 吸氧2L/min\n4. 建立静脉通路\n5. 密切观察生命体征",
-                specialNotes: "心绞痛发作，需密切监护",
-                nextPlan: "持续心电监护，30分钟后评估症状缓解情况"
-            },
-            {
-                id: "NR005",
-                patientName: "刘丽",
-                bedNo: "305",
-                age: 68,
-                diagnosis: "脑梗死恢复期",
-                recordType: "special",
-                recordTime: "2025-12-13 13:00",
-                nurseName: "赵护士",
-                vitalSigns: {
-                    temperature: "36.6℃",
-                    pulse: "78次/分",
-                    respiration: "20次/分",
-                    bloodPressure: "140/88mmHg"
-                },
-                content: "患者进行康复训练，左侧肢体肌力3级，能够完成简单抓握动作。情绪稳定。",
-                nursingMeasures: "1. 协助进行康复训练\n2. 指导患肢功能锻炼\n3. 预防跌倒宣教\n4. 鼓励患者树立信心",
-                specialNotes: "注意康复训练强度和时间",
-                nextPlan: "明日继续康复训练，逐步增加训练强度"
-            }
-        ];
+        // 常量定义
+        const PATIENTS_KEY = 'doctor_patients';  // 患者数据
+        const BED_ASSIGNMENTS_KEY = 'bed_assignments';  // 床位分配
+        const NURSING_RECORDS_KEY = 'nursing_records';  // 护理记录
+
+        // 全局变量
+        let patients = [];
+        let bedAssignments = [];
+        let nursingRecords = [];
+        let filteredRecords = [];
+        let currentNurse = '王护士';  // 当前登录护士
 
         // 初始化页面
         document.addEventListener('DOMContentLoaded', function() {
-            renderRecordsList();
+            loadData();
             setupEventListeners();
             
-            // 设置默认日期
+            // 设置默认日期为今天
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('startDate').value = today;
             document.getElementById('endDate').value = today;
+            
+            // 监听localStorage变化
+            window.addEventListener('storage', function(e) {
+                if (e.key === PATIENTS_KEY || e.key === BED_ASSIGNMENTS_KEY) {
+                    console.log('检测到数据更新，自动刷新...');
+                    loadData();
+                }
+            });
         });
 
-        // 渲染记录列表
-        function renderRecordsList(filteredData = recordsData) {
-            const recordsList = document.getElementById('recordsList');
-            recordsList.innerHTML = '';
+        // 加载所有数据
+        function loadData() {
+            try {
+                // 加载患者数据
+                const savedPatients = localStorage.getItem(PATIENTS_KEY);
+                if (savedPatients) {
+                    patients = JSON.parse(savedPatients);
+                }
 
-            if (filteredData.length === 0) {
+                // 加载床位分配数据
+                const savedBeds = localStorage.getItem(BED_ASSIGNMENTS_KEY);
+                if (savedBeds) {
+                    bedAssignments = JSON.parse(savedBeds);
+                }
+
+                // 加载护理记录数据
+                const savedRecords = localStorage.getItem(NURSING_RECORDS_KEY);
+                if (savedRecords) {
+                    nursingRecords = JSON.parse(savedRecords);
+                } else {
+                    // 如果没有护理记录，初始化空数组
+                    nursingRecords = [];
+                    saveNursingRecords();
+                }
+
+                // 更新筛选器选项
+                updateFilterOptions();
+                
+                // 渲染记录列表
+                renderRecordsList();
+                
+                // 更新今日统计
+                updateTodayStats();
+                
+            } catch (e) {
+                console.error('加载数据失败:', e);
+                showMessage('加载数据失败，请刷新页面重试', 'error');
+            }
+        }
+
+        // 保存护理记录
+        function saveNursingRecords() {
+            localStorage.setItem(NURSING_RECORDS_KEY, JSON.stringify(nursingRecords));
+        }
+
+        // 获取住院患者列表
+        function getInpatients() {
+            const inpatients = [];
+            
+            bedAssignments.forEach(bed => {
+                if (bed.status === 'occupied' && bed.patientId) {
+                    const patient = patients.find(p => p.id === bed.patientId);
+                    if (patient) {
+                        inpatients.push({
+                            ...patient,
+                            bedNo: bed.bedno,
+                            admissionDate: bed.admitDate
+                        });
+                    }
+                }
+            });
+            
+            return inpatients;
+        }
+
+        // 更新筛选器选项
+        function updateFilterOptions() {
+            const inpatients = getInpatients();
+            
+            // 更新患者筛选器
+            const patientFilter = document.getElementById('patientFilter');
+            const patientOptions = ['<option value="all">全部患者</option>'];
+            
+            inpatients.forEach(patient => {
+                patientOptions.push(
+                    `<option value="${patient.bedNo}">${patient.bedNo}床 - ${patient.name} (${patient.diagnosis || '暂无诊断'})</option>`
+                );
+            });
+            patientFilter.innerHTML = patientOptions.join('');
+
+            // 更新新建记录的患者选择
+            const recordPatient = document.getElementById('recordPatient');
+            const patientSelectOptions = ['<option value="">选择患者</option>'];
+            
+            inpatients.forEach(patient => {
+                patientSelectOptions.push(
+                    `<option value="${patient.bedNo}" data-patient-id="${patient.id}" data-name="${patient.name}" data-age="${patient.age}" data-diagnosis="${patient.diagnosis || ''}">
+                        ${patient.bedNo}床 - ${patient.name} (${patient.age}岁，${patient.diagnosis || '暂无诊断'})
+                    </option>`
+                );
+            });
+            recordPatient.innerHTML = patientSelectOptions.join('');
+            
+            // 更新护士筛选器（从护理记录中提取）
+            const nurses = [...new Set(nursingRecords.map(r => r.nurseName))];
+            const nurseFilter = document.getElementById('nurseFilter');
+            const nurseOptions = ['<option value="all">全部护士</option>'];
+            nurses.forEach(nurse => {
+                nurseOptions.push(`<option value="${nurse}">${nurse}</option>`);
+            });
+            nurseFilter.innerHTML = nurseOptions.join('');
+        }
+
+        // 渲染记录列表
+        function renderRecordsList(filteredData = null) {
+            const recordsList = document.getElementById('recordsList');
+            
+            let recordsToShow = filteredData || nursingRecords;
+            filteredRecords = recordsToShow;
+
+            if (recordsToShow.length === 0) {
                 recordsList.innerHTML = `
                     <div style="text-align: center; padding: 3rem; color: var(--text-secondary)">
                         <div style="font-size: 3rem; margin-bottom: 1rem">📋</div>
@@ -888,13 +1000,15 @@
                 return;
             }
 
-            filteredData.forEach(record => {
+            recordsList.innerHTML = '';
+            
+            recordsToShow.sort((a, b) => new Date(b.recordTime) - new Date(a.recordTime)).forEach(record => {
                 const typeText = {
                     'routine': '常规护理',
                     'special': '特殊护理',
                     'critical': '危重护理',
                     'discharge': '出院指导'
-                }[record.recordType];
+                }[record.recordType] || record.recordType;
 
                 const typeClass = `type-${record.recordType}`;
 
@@ -905,14 +1019,14 @@
                         <div class="record-patient">
                             <div class="patient-avatar">${record.patientName.charAt(0)}</div>
                             <div class="patient-info">
-                                <h4>${record.patientName} (${record.age}岁)</h4>
+                                <h4>${record.patientName} (${record.patientAge}岁)</h4>
                                 <div class="patient-details">
-                                    ${record.bedNo}床 | ${record.diagnosis}
+                                    ${record.bedNo}床 | ${record.diagnosis || '暂无诊断'}
                                 </div>
                             </div>
                         </div>
                         <div class="record-meta">
-                            <div class="record-time">${record.recordTime}</div>
+                            <div class="record-time">${formatDateTime(record.recordTime)}</div>
                             <span class="record-type ${typeClass}">${typeText}</span>
                         </div>
                     </div>
@@ -921,21 +1035,21 @@
                         <div class="content-section">
                             <div class="content-title">🌡️ 生命体征</div>
                             <div class="content-text">
-                                体温：${record.vitalSigns.temperature} | 
-                                脉搏：${record.vitalSigns.pulse} | 
-                                呼吸：${record.vitalSigns.respiration} | 
-                                血压：${record.vitalSigns.bloodPressure}
+                                体温：${record.vitalSigns.temperature || '未记录'} | 
+                                脉搏：${record.vitalSigns.pulse || '未记录'} | 
+                                呼吸：${record.vitalSigns.respiration || '未记录'} | 
+                                血压：${record.vitalSigns.bloodPressure || '未记录'}
                             </div>
                         </div>
                         
                         <div class="content-section">
                             <div class="content-title">📋 护理内容</div>
-                            <div class="content-text">${record.content}</div>
+                            <div class="content-text">${record.content || '无'}</div>
                         </div>
                         
                         <div class="content-section">
                             <div class="content-title">💊 护理措施</div>
-                            <div class="content-text" style="white-space: pre-line;">${record.nursingMeasures}</div>
+                            <div class="content-text" style="white-space: pre-line;">${record.nursingMeasures || '无'}</div>
                         </div>
                     </div>
                     
@@ -943,12 +1057,24 @@
                         <div class="record-nurse">记录护士：${record.nurseName}</div>
                         <div class="record-actions">
                             <button class="btn btn-view" onclick="viewRecordDetail('${record.id}')">查看详情</button>
-                            <button class="btn btn-edit" onclick="editRecord('${record.id}')">编辑</button>
+                            <button class="btn btn-edit" onclick="openEditModal('${record.id}')">编辑</button>
                             <button class="btn btn-delete" onclick="deleteRecord('${record.id}')">删除</button>
                         </div>
                     </div>
                 `;
                 recordsList.appendChild(recordItem);
+            });
+        }
+
+        // 格式化日期时间
+        function formatDateTime(dateTimeStr) {
+            const date = new Date(dateTimeStr);
+            return date.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
             });
         }
 
@@ -969,48 +1095,46 @@
                 e.preventDefault();
                 saveNewRecord();
             });
+
+            // 编辑记录表单提交
+            document.getElementById('editRecordForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                updateRecord();
+            });
         }
 
         // 过滤记录
         function filterRecords() {
             const type = document.getElementById('typeFilter').value;
-            const patient = document.getElementById('patientFilter').value;
+            const patientBed = document.getElementById('patientFilter').value;
             const nurse = document.getElementById('nurseFilter').value;
             const start = document.getElementById('startDate').value;
             const end = document.getElementById('endDate').value;
 
-            let filtered = recordsData;
+            let filtered = nursingRecords;
 
             if (type !== 'all') {
                 filtered = filtered.filter(record => record.recordType === type);
             }
 
-            if (patient !== 'all') {
-                filtered = filtered.filter(record => record.bedNo === patient);
+            if (patientBed !== 'all') {
+                filtered = filtered.filter(record => record.bedNo === patientBed);
             }
 
             if (nurse !== 'all') {
-                filtered = filtered.filter(record => {
-                    const nurseMap = {
-                        'wang': '王护士',
-                        'li': '李护士',
-                        'zhang': '张护士',
-                        'zhao': '赵护士'
-                    };
-                    return record.nurseName === nurseMap[nurse];
-                });
+                filtered = filtered.filter(record => record.nurseName === nurse);
             }
 
             if (start) {
                 filtered = filtered.filter(record => {
-                    const recordDate = record.recordTime.split(' ')[0];
+                    const recordDate = record.recordTime.split('T')[0];
                     return recordDate >= start;
                 });
             }
 
             if (end) {
                 filtered = filtered.filter(record => {
-                    const recordDate = record.recordTime.split(' ')[0];
+                    const recordDate = record.recordTime.split('T')[0];
                     return recordDate <= end;
                 });
             }
@@ -1018,8 +1142,24 @@
             renderRecordsList(filtered);
         }
 
+        // 更新今日统计
+        function updateTodayStats() {
+            const today = new Date().toISOString().split('T')[0];
+            const todayRecords = nursingRecords.filter(record => 
+                record.recordTime.startsWith(today)
+            );
+            document.getElementById('todayCount').textContent = todayRecords.length;
+        }
+
         // 打开新建记录模态框
         function openNewRecordModal() {
+            // 检查是否有住院患者
+            const inpatients = getInpatients();
+            if (inpatients.length === 0) {
+                showMessage('没有住院患者，无法创建护理记录', 'warning');
+                return;
+            }
+            
             document.getElementById('newRecordModal').style.display = 'flex';
         }
 
@@ -1029,93 +1169,186 @@
             document.getElementById('newRecordForm').reset();
         }
 
+        // 关闭编辑模态框
+        function closeEditModal() {
+            document.getElementById('editRecordModal').style.display = 'none';
+            document.getElementById('editRecordForm').reset();
+        }
+
+        // 关闭查看模态框
+        function closeViewModal() {
+            document.getElementById('viewRecordModal').style.display = 'none';
+        }
+
         // 保存新记录
         function saveNewRecord() {
             const patientSelect = document.getElementById('recordPatient');
-            const patientInfo = patientSelect.options[patientSelect.selectedIndex].text.split(' - ');
+            const selectedOption = patientSelect.options[patientSelect.selectedIndex];
+            
+            if (!selectedOption.value) {
+                showMessage('请选择患者', 'warning');
+                return;
+            }
+
+            const patientId = selectedOption.dataset.patientId;
+            const patientName = selectedOption.dataset.name;
+            const patientAge = selectedOption.dataset.age;
+            const diagnosis = selectedOption.dataset.diagnosis;
             
             const newRecord = {
-                id: "NR" + (recordsData.length + 1).toString().padStart(3, '0'),
-                patientName: patientInfo[1],
-                bedNo: patientInfo[0].replace('床', ''),
-                age: parseInt(patientInfo[2].match(/\d+/)[0]),
-                diagnosis: patientInfo[2].split('，')[1],
+                id: 'NR' + Date.now() + Math.random().toString(36).substr(2, 5),
+                patientId: patientId,
+                patientName: patientName,
+                bedNo: selectedOption.value,
+                patientAge: patientAge,
+                diagnosis: diagnosis,
                 recordType: document.getElementById('recordType').value,
-                recordTime: new Date().toLocaleString('zh-CN'),
-                nurseName: "王护士",
+                recordTime: new Date().toISOString(),
+                nurseName: currentNurse,
                 vitalSigns: {
-                    temperature: document.getElementById('vitalTemp').value || "未记录",
-                    pulse: document.getElementById('vitalPulse').value || "未记录",
-                    respiration: document.getElementById('vitalResp').value || "未记录",
-                    bloodPressure: document.getElementById('vitalBP').value || "未记录"
+                    temperature: document.getElementById('vitalTemp').value || '未记录',
+                    pulse: document.getElementById('vitalPulse').value || '未记录',
+                    respiration: document.getElementById('vitalResp').value || '未记录',
+                    bloodPressure: document.getElementById('vitalBP').value || '未记录'
                 },
                 content: document.getElementById('recordContent').value,
                 nursingMeasures: document.getElementById('nursingMeasures').value,
                 specialNotes: document.getElementById('specialNotes').value,
-                nextPlan: document.getElementById('nextPlan').value
+                nextPlan: document.getElementById('nextPlan').value,
+                createdTime: new Date().toISOString()
             };
 
-            recordsData.unshift(newRecord);
+            nursingRecords.push(newRecord);
+            saveNursingRecords();
             closeModal();
             renderRecordsList();
-            alert('护理记录保存成功！');
+            updateTodayStats();
+            showMessage('护理记录保存成功！', 'success');
+        }
+
+        // 打开编辑模态框
+        function openEditModal(recordId) {
+            const record = nursingRecords.find(r => r.id === recordId);
+            if (record) {
+                document.getElementById('editRecordId').value = record.id;
+                document.getElementById('editPatientInfo').value = `${record.patientName} (${record.patientAge}岁) ${record.bedNo}床`;
+                document.getElementById('editRecordType').value = record.recordType;
+                document.getElementById('editVitalTemp').value = record.vitalSigns.temperature;
+                document.getElementById('editVitalPulse').value = record.vitalSigns.pulse;
+                document.getElementById('editVitalResp').value = record.vitalSigns.respiration;
+                document.getElementById('editVitalBP').value = record.vitalSigns.bloodPressure;
+                document.getElementById('editRecordContent').value = record.content;
+                document.getElementById('editSpecialNotes').value = record.specialNotes || '';
+                document.getElementById('editNursingMeasures').value = record.nursingMeasures;
+                document.getElementById('editNextPlan').value = record.nextPlan || '';
+                
+                document.getElementById('editRecordModal').style.display = 'flex';
+            }
+        }
+
+        // 更新记录
+        function updateRecord() {
+            const recordId = document.getElementById('editRecordId').value;
+            const record = nursingRecords.find(r => r.id === recordId);
+            
+            if (record) {
+                record.recordType = document.getElementById('editRecordType').value;
+                record.vitalSigns = {
+                    temperature: document.getElementById('editVitalTemp').value,
+                    pulse: document.getElementById('editVitalPulse').value,
+                    respiration: document.getElementById('editVitalResp').value,
+                    bloodPressure: document.getElementById('editVitalBP').value
+                };
+                record.content = document.getElementById('editRecordContent').value;
+                record.specialNotes = document.getElementById('editSpecialNotes').value;
+                record.nursingMeasures = document.getElementById('editNursingMeasures').value;
+                record.nextPlan = document.getElementById('editNextPlan').value;
+                record.lastModified = new Date().toISOString();
+
+                saveNursingRecords();
+                closeEditModal();
+                renderRecordsList();
+                showMessage('护理记录更新成功！', 'success');
+            }
         }
 
         // 查看记录详情
         function viewRecordDetail(recordId) {
-            const record = recordsData.find(r => r.id === recordId);
+            const record = nursingRecords.find(r => r.id === recordId);
             if (record) {
-                const detailText = `
-患者信息：${record.patientName} (${record.age}岁) ${record.bedNo}床
-诊断：${record.diagnosis}
-记录时间：${record.recordTime}
-记录护士：${record.nurseName}
-记录类型：${record.recordType === 'routine' ? '常规护理' : 
-          record.recordType === 'special' ? '特殊护理' : 
-          record.recordType === 'critical' ? '危重护理' : '出院指导'}
-
-生命体征：
-体温：${record.vitalSigns.temperature}
-脉搏：${record.vitalSigns.pulse}
-呼吸：${record.vitalSigns.respiration}
-血压：${record.vitalSigns.bloodPressure}
-
-护理内容：
-${record.content}
-
-特殊情况：
-${record.specialNotes || '无'}
-
-护理措施：
-${record.nursingMeasures}
-
-下次护理计划：
-${record.nextPlan || '无'}
+                const viewModal = document.getElementById('viewRecordModal');
+                const viewDetails = document.getElementById('viewRecordDetails');
+                
+                const typeText = {
+                    'routine': '常规护理',
+                    'special': '特殊护理',
+                    'critical': '危重护理',
+                    'discharge': '出院指导'
+                }[record.recordType] || record.recordType;
+                
+                viewDetails.innerHTML = `
+                    <div style="background: rgba(255,255,255,0.05); padding: 1.5rem; border-radius: 12px;">
+                        <h4 style="color: var(--accent-color); margin-bottom: 1rem;">患者信息</h4>
+                        <p><strong>姓名：</strong> ${record.patientName}</p>
+                        <p><strong>年龄：</strong> ${record.patientAge}岁</p>
+                        <p><strong>床位：</strong> ${record.bedNo}床</p>
+                        <p><strong>诊断：</strong> ${record.diagnosis || '暂无'}</p>
+                    </div>
+                    
+                    <div style="background: rgba(255,255,255,0.05); padding: 1.5rem; border-radius: 12px; margin-top: 1rem;">
+                        <h4 style="color: var(--accent-color); margin-bottom: 1rem;">记录信息</h4>
+                        <p><strong>记录类型：</strong> ${typeText}</p>
+                        <p><strong>记录时间：</strong> ${formatDateTime(record.recordTime)}</p>
+                        <p><strong>记录护士：</strong> ${record.nurseName}</p>
+                    </div>
+                    
+                    <div style="background: rgba(255,255,255,0.05); padding: 1.5rem; border-radius: 12px; margin-top: 1rem;">
+                        <h4 style="color: var(--accent-color); margin-bottom: 1rem;">生命体征</h4>
+                        <p><strong>体温：</strong> ${record.vitalSigns.temperature || '未记录'}</p>
+                        <p><strong>脉搏：</strong> ${record.vitalSigns.pulse || '未记录'}</p>
+                        <p><strong>呼吸：</strong> ${record.vitalSigns.respiration || '未记录'}</p>
+                        <p><strong>血压：</strong> ${record.vitalSigns.bloodPressure || '未记录'}</p>
+                    </div>
+                    
+                    <div style="background: rgba(255,255,255,0.05); padding: 1.5rem; border-radius: 12px; margin-top: 1rem;">
+                        <h4 style="color: var(--accent-color); margin-bottom: 1rem;">护理内容</h4>
+                        <p style="white-space: pre-line;">${record.content || '无'}</p>
+                    </div>
+                    
+                    ${record.specialNotes ? `
+                    <div style="background: rgba(255,255,255,0.05); padding: 1.5rem; border-radius: 12px; margin-top: 1rem;">
+                        <h4 style="color: var(--accent-color); margin-bottom: 1rem;">特殊情况</h4>
+                        <p style="white-space: pre-line;">${record.specialNotes}</p>
+                    </div>
+                    ` : ''}
+                    
+                    <div style="background: rgba(255,255,255,0.05); padding: 1.5rem; border-radius: 12px; margin-top: 1rem;">
+                        <h4 style="color: var(--accent-color); margin-bottom: 1rem;">护理措施</h4>
+                        <p style="white-space: pre-line;">${record.nursingMeasures || '无'}</p>
+                    </div>
+                    
+                    ${record.nextPlan ? `
+                    <div style="background: rgba(255,255,255,0.05); padding: 1.5rem; border-radius: 12px; margin-top: 1rem;">
+                        <h4 style="color: var(--accent-color); margin-bottom: 1rem;">下次护理计划</h4>
+                        <p style="white-space: pre-line;">${record.nextPlan}</p>
+                    </div>
+                    ` : ''}
                 `;
-                alert(detailText);
-            }
-        }
-
-        // 编辑记录
-        function editRecord(recordId) {
-            const record = recordsData.find(r => r.id === recordId);
-            if (record) {
-                if (confirm('确定要编辑这条护理记录吗？')) {
-                    // 在实际应用中，这里会打开编辑模态框
-                    // 简化版：提示编辑成功
-                    alert('进入编辑模式（实际应用中会打开编辑表单）');
-                }
+                
+                viewModal.style.display = 'flex';
             }
         }
 
         // 删除记录
         function deleteRecord(recordId) {
             if (confirm('确定要删除这条护理记录吗？此操作不可恢复。')) {
-                const index = recordsData.findIndex(r => r.id === recordId);
+                const index = nursingRecords.findIndex(r => r.id === recordId);
                 if (index !== -1) {
-                    recordsData.splice(index, 1);
+                    nursingRecords.splice(index, 1);
+                    saveNursingRecords();
                     renderRecordsList();
-                    alert('护理记录已删除');
+                    updateTodayStats();
+                    showMessage('护理记录已删除', 'success');
                 }
             }
         }
@@ -1139,25 +1372,65 @@ ${record.nextPlan || '无'}
 
         // 导出记录
         function exportRecords() {
-            alert('护理记录导出功能（可导出为Excel或PDF格式）');
+            const dataStr = JSON.stringify(nursingRecords, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `nursing_records_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showMessage('护理记录导出成功', 'success');
         }
 
         // 打印记录
         function printRecords() {
-            alert('打印护理记录功能');
+            window.print();
         }
 
         // 刷新记录
         function refreshRecords() {
-            renderRecordsList();
-            alert('记录列表已刷新');
+            loadData();
+            showMessage('记录列表已刷新', 'success');
+        }
+
+        // 显示消息提示
+        function showMessage(msg, type) {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 12px 24px;
+                background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#f59e0b'};
+                color: white;
+                border-radius: 8px;
+                z-index: 9999;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                animation: slideIn 0.3s ease;
+            `;
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
         }
 
         // 点击模态框外部关闭
         window.onclick = function(event) {
-            const modal = document.getElementById('newRecordModal');
-            if (event.target === modal) {
+            const newModal = document.getElementById('newRecordModal');
+            const editModal = document.getElementById('editRecordModal');
+            const viewModal = document.getElementById('viewRecordModal');
+            
+            if (event.target === newModal) {
                 closeModal();
+            }
+            if (event.target === editModal) {
+                closeEditModal();
+            }
+            if (event.target === viewModal) {
+                closeViewModal();
             }
         }
     </script>

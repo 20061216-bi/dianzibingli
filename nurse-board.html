@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8"/>
-  <title>护士站看板</title>
+  <title>护士站看板 - 床位管理</title>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Helvetica,Arial,"PingFang SC","Microsoft YaHei",sans-serif}
@@ -10,60 +10,93 @@
     header{display:flex;align-items:center;justify-content:space-between;background:#fff;padding:10px 20px;box-shadow:0 2px 4px rgba(0,0,0,.05)}
     .logo{font-size:20px;font-weight:700;color:#1890ff}
     .time{font-size:18px;color:#666}
-    .stats{display:flex;gap:20px;background:#fff;margin:10px 20px;padding:10px 15px;border-radius:6px;box-shadow:0 2px 4px rgba(0,0,0,.05)}
-    .stat{text-align:center}
+    .refresh-btn{background:#1890ff;color:#fff;border:none;padding:5px 15px;border-radius:4px;cursor:pointer;margin-left:10px}
+    .stats{display:flex;gap:20px;background:#fff;margin:10px 20px;padding:10px 15px;border-radius:6px;box-shadow:0 2px 4px rgba(0,0,0,.05);flex-wrap:wrap}
+    .stat{text-align:center;min-width:60px}
     .stat .num{font-size:28px;font-weight:700}
     .stat .lab{font-size:14px;color:#999}
     .beds{flex:1;display:flex;flex-wrap:wrap;gap:12px;padding:0 20px 20px;overflow-y:auto}
     .card{width:calc(16.666% - 10px);background:#fff;border-radius:6px;box-shadow:0 2px 6px rgba(0,0,0,.08);cursor:pointer;transition:.2s}
-    .card:hover{transform:translateY(-2px)}
+    .card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.15)}
     .card.empty{background:#e8f0ff;color:#8590a6}
-    .card.critical{background:#fff1f0;border:1px solid #ff4d4f}
-    .card.new{background:#f6ffed;border:1px solid #b7eb8f}
-    .topbar{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;font-size:13px}
-    .bedno{font-weight:700;font-size:16px}
+    .card.critical{background:#fff1f0;border-left:3px solid #ff4d4f}
+    .card.new{background:#f6ffed;border-left:3px solid #52c41a}
+    .topbar{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;font-size:13px;border-bottom:1px solid #f0f0f0}
+    .bedno{font-weight:700;font-size:16px;color:#1890ff}
     .gender-age{font-size:12px;color:#666}
-    .body{padding:0 10px 8px}
-    .name{font-size:15px;font-weight:700;margin-bottom:4px}
-    .doc{font-size:12px;color:#666}
-    .tags{display:flex;gap:4px;margin-top:6px}
-    .tag{padding:2px 5px;border-radius:3px;font-size:11px}
+    .body{padding:8px 10px}
+    .name{font-size:15px;font-weight:700;margin-bottom:4px;display:flex;justify-content:space-between}
+    .doc{font-size:12px;color:#666;margin-bottom:4px}
+    .diag{font-size:11px;color:#333;background:#f5f5f5;padding:2px 4px;border-radius:3px;margin-bottom:6px}
+    .tags{display:flex;gap:4px;flex-wrap:wrap}
+    .tag{padding:2px 6px;border-radius:3px;font-size:10px;font-weight:500}
     .tag.new{background:#52c41a;color:#fff}
     .tag.critical{background:#ff4d4f;color:#fff}
     .tag.allergy{background:#faad14;color:#fff}
     .tag.owe{background:#f5222d;color:#fff}
+    .tag.surgery{background:#722ed1;color:#fff}
     /* 弹窗 */
-    .modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center}
+    .modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;z-index:1000}
     .modal.show{display:flex}
-    .modal-content{background:#fff;width:400px;border-radius:8px;padding:20px}
-    .modal-header{display:flex;justify-content:space-between;align-items:center}
-    .close{font-size:20px;cursor:pointer}
-    .modal-body{margin-top:10px;font-size:14px;line-height:1.8}
+    .modal-content{background:#fff;width:450px;border-radius:8px;padding:20px;max-height:80vh;overflow-y:auto}
+    .modal-header{display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;border-bottom:1px solid #e8e8e8}
+    .close{font-size:24px;cursor:pointer;color:#999}
+    .close:hover{color:#333}
+    .modal-body{margin-top:15px;font-size:14px;line-height:2}
+    .info-row{display:flex;margin-bottom:8px}
+    .info-label{width:80px;color:#999}
+    .info-value{flex:1;font-weight:500}
+    .badge{display:inline-block;padding:3px 8px;border-radius:4px;font-size:12px;margin-right:5px}
+    .badge.primary{background:#e6f7ff;color:#1890ff}
+    .badge.warning{background:#fff7e6;color:#fa8c16}
+    /* 筛选栏 */
+    .filter-bar{background:#fff;margin:0 20px 10px;padding:10px;border-radius:6px;display:flex;gap:10px;flex-wrap:wrap}
+    .filter-btn{padding:5px 12px;border:1px solid #d9d9d9;border-radius:4px;background:#fff;cursor:pointer}
+    .filter-btn.active{background:#1890ff;color:#fff;border-color:#1890ff}
+    .filter-btn:hover{background:#e6f7ff}
+    /* 空床操作 */
+    .empty-actions{display:flex;gap:5px;margin-top:5px}
+    .assign-btn{background:#52c41a;color:#fff;border:none;padding:2px 8px;border-radius:3px;font-size:11px;cursor:pointer}
   </style>
 </head>
 <body>
 <header>
-  <div class="logo">床位信息</div>
-  <div class="time" id="clock"></div>
+  <div class="logo">🏥 护士站床位看板</div>
+  <div style="display:flex;align-items:center">
+    <div class="time" id="clock"></div>
+    <button class="refresh-btn" onclick="loadData()">🔄 刷新数据</button>
+  </div>
 </header>
 
+<!-- 筛选栏 -->
+<div class="filter-bar">
+  <button class="filter-btn active" onclick="filterBeds('all')">全部床位</button>
+  <button class="filter-btn" onclick="filterBeds('occupied')">占用床位</button>
+  <button class="filter-btn" onclick="filterBeds('empty')">空床</button>
+  <button class="filter-btn" onclick="filterBeds('critical')">危重患者</button>
+  <button class="filter-btn" onclick="filterBeds('new')">新入患者</button>
+  <button class="filter-btn" onclick="filterBeds('allergy')">过敏患者</button>
+</div>
+
+<!-- 统计数据 -->
 <section class="stats">
-  <div class="stat"><div class="num" id="s-all">37</div><div class="lab">全部</div></div>
-  <div class="stat"><div class="num" id="s-new">5</div><div class="lab">新入</div></div>
-  <div class="stat"><div class="num" id="s-critical">1</div><div class="lab">危重</div></div>
-  <div class="stat"><div class="num" id="s-empty">6</div><div class="lab">空床</div></div>
-  <div class="stat"><div class="num" id="s-oper">0</div><div class="lab">今日手术</div></div>
-  <div class="stat"><div class="num" id="s-allergy">3</div><div class="lab">过敏</div></div>
-  <div class="stat"><div class="num" id="s-owe">2</div><div class="lab">欠费</div></div>
+  <div class="stat"><div class="num" id="s-total">0</div><div class="lab">总床位</div></div>
+  <div class="stat"><div class="num" id="s-occupied">0</div><div class="lab">已占用</div></div>
+  <div class="stat"><div class="num" id="s-empty">0</div><div class="lab">空床</div></div>
+  <div class="stat"><div class="num" id="s-new">0</div><div class="lab">新入院</div></div>
+  <div class="stat"><div class="num" id="s-critical">0</div><div class="lab">危重</div></div>
+  <div class="stat"><div class="num" id="s-allergy">0</div><div class="lab">过敏</div></div>
+  <div class="stat"><div class="num" id="s-owe">0</div><div class="lab">欠费</div></div>
 </section>
 
+<!-- 床位网格 -->
 <main class="beds" id="beds"></main>
 
-<!-- 弹窗 -->
+<!-- 详情弹窗 -->
 <div class="modal" id="modal">
   <div class="modal-content">
     <div class="modal-header">
-      <span id="m-title"></span>
+      <span id="m-title" style="font-size:18px;font-weight:700"></span>
       <span class="close" onclick="closeModal()">&times;</span>
     </div>
     <div class="modal-body" id="m-body"></div>
@@ -71,110 +104,433 @@
 </div>
 
 <script>
-/* -------- 模拟数据 -------- */
-const beds = [];
-for(let i=1;i<=43;i++){
-  const status = Math.random()>0.86?'empty':      // 空床
-                 Math.random()>0.6?'normal':'patient';
-  if(status==='empty'){
-    beds.push({bedno:String(i).padStart(3,'0'),status:'empty'})
-  }else{
-    const name = ['张','李','王','赵','钱'][Math.floor(Math.random()*5)] + '**';
-    const gender = Math.random()>0.5?'男':'女';
-    const age = Math.floor(Math.random()*70+18);
-    const doctor = ['孙十工','王玉红','王秀','张艳红','孙叶虹'][Math.floor(Math.random()*5)];
+// 常量定义
+const STORE_KEY = 'doctor_patients';  // 与医生端保持一致
+const TOTAL_BEDS = 43;  // 总床位数
+
+// 全局变量
+let patients = [];  // 从localStorage加载的患者数据
+let bedAssignments = [];  // 床位分配数据
+let currentFilter = 'all';  // 当前筛选条件
+
+/* -------- 初始化加载数据 -------- */
+function loadData() {
+    try {
+        // 从localStorage读取医生端保存的患者数据
+        const saved = localStorage.getItem(STORE_KEY);
+        if (saved) {
+            patients = JSON.parse(saved);
+            console.log('加载患者数据成功，共', patients.length, '位患者');
+        } else {
+            patients = [];
+            console.log('暂无患者数据');
+        }
+        
+        // 加载床位分配信息
+        loadBedAssignments();
+        
+        // 自动分配患者到床位
+        assignPatientsToBeds();
+        
+        // 更新UI
+        renderBeds();
+        updateStats();
+        
+    } catch (e) {
+        console.error('加载数据失败:', e);
+        alert('加载数据失败，请刷新页面重试');
+    }
+}
+
+/* -------- 加载床位分配信息 -------- */
+function loadBedAssignments() {
+    const savedAssignments = localStorage.getItem('bed_assignments');
+    if (savedAssignments) {
+        bedAssignments = JSON.parse(savedAssignments);
+    } else {
+        // 初始化空床位
+        bedAssignments = [];
+        for (let i = 1; i <= TOTAL_BEDS; i++) {
+            bedAssignments.push({
+                bedno: String(i).padStart(3, '0'),
+                patientId: null,
+                status: 'empty',
+                admitDate: null
+            });
+        }
+        saveBedAssignments();
+    }
+}
+
+/* -------- 保存床位分配信息 -------- */
+function saveBedAssignments() {
+    localStorage.setItem('bed_assignments', JSON.stringify(bedAssignments));
+}
+
+/* -------- 自动分配患者到床位 -------- */
+function assignPatientsToBeds() {
+    // 清除旧的分配（只保留已存在的患者分配）
+    bedAssignments.forEach(bed => {
+        if (bed.patientId) {
+            const patientExists = patients.some(p => p.id === bed.patientId);
+            if (!patientExists) {
+                bed.patientId = null;
+                bed.status = 'empty';
+                bed.admitDate = null;
+            }
+        }
+    });
+    
+    // 获取未分配床位的患者
+    const assignedPatientIds = bedAssignments
+        .filter(b => b.patientId)
+        .map(b => b.patientId);
+    
+    const unassignedPatients = patients.filter(p => !assignedPatientIds.includes(p.id));
+    
+    // 获取空床位
+    const emptyBeds = bedAssignments.filter(b => b.status === 'empty');
+    
+    // 分配患者到空床位
+    unassignedPatients.forEach((patient, index) => {
+        if (index < emptyBeds.length) {
+            const bed = emptyBeds[index];
+            bed.patientId = patient.id;
+            bed.status = 'occupied';
+            bed.admitDate = patient.admitDate || new Date().toISOString().split('T')[0];
+        }
+    });
+    
+    saveBedAssignments();
+}
+
+/* -------- 根据床位号获取患者信息 -------- */
+function getPatientByBed(bedno) {
+    const assignment = bedAssignments.find(b => b.bedno === bedno);
+    if (!assignment || !assignment.patientId) return null;
+    
+    const patient = patients.find(p => p.id === assignment.patientId);
+    if (!patient) return null;
+    
+    // 合并信息
+    return {
+        ...patient,
+        bedno: assignment.bedno,
+        admitDate: assignment.admitDate || patient.admitDate,
+        status: assignment.status
+    };
+}
+
+/* -------- 判断患者标签 -------- */
+function getPatientTags(patient) {
     const tags = [];
-    if(Math.random()>0.7) tags.push('new');
-    if(Math.random()>0.9) tags.push('critical');
-    if(Math.random()>0.85) tags.push('allergy');
-    if(Math.random()>0.88) tags.push('owe');
-    beds.push({bedno:String(i).padStart(3,'0'),status:'patient',name,gender,age,doctor,tags,
-               adt:'2025-12-12',diag:'慢性阻塞性肺病伴急性加重',phone:'138****1234',level:'一级护理'})
-  }
+    
+    // 新入院判断（入院日期在今天或昨天）
+    if (patient.admitDate) {
+        const admitDate = new Date(patient.admitDate);
+        const today = new Date();
+        const diffDays = Math.floor((today - admitDate) / (1000 * 60 * 60 * 24));
+        if (diffDays <= 1) tags.push('new');
+    }
+    
+    // 危重判断（可以从诊断或医嘱中判断，这里简单模拟）
+    if (patient.diag && (
+        patient.diag.includes('危重') || 
+        patient.diag.includes('重症') ||
+        patient.diag.includes('ICU')
+    )) tags.push('critical');
+    
+    // 过敏判断（从医嘱或备注中）
+    if (patient.notes && patient.notes.includes('过敏')) tags.push('allergy');
+    
+    // 欠费判断（模拟）
+    if (Math.random() > 0.9) tags.push('owe');
+    
+    // 手术判断（模拟）
+    if (Math.random() > 0.85) tags.push('surgery');
+    
+    return tags;
 }
 
 /* -------- 渲染床位卡片 -------- */
-function renderBeds(){
-  const box = document.getElementById('beds');
-  box.innerHTML = '';
-  beds.forEach(b=>{
-    const card = document.createElement('div');
-    card.className = 'card';
-    if(b.status==='empty') card.classList.add('empty');
-    else{
-      if(b.tags.includes('critical')) card.classList.add('critical');
-      if(b.tags.includes('new')) card.classList.add('new');
+function renderBeds() {
+    const box = document.getElementById('beds');
+    box.innerHTML = '';
+    
+    // 获取筛选后的床位列表
+    let filteredBeds = bedAssignments;
+    
+    switch(currentFilter) {
+        case 'occupied':
+            filteredBeds = bedAssignments.filter(b => b.status === 'occupied');
+            break;
+        case 'empty':
+            filteredBeds = bedAssignments.filter(b => b.status === 'empty');
+            break;
+        case 'critical':
+            filteredBeds = bedAssignments.filter(b => {
+                if (b.status !== 'occupied') return false;
+                const patient = getPatientByBed(b.bedno);
+                return patient && getPatientTags(patient).includes('critical');
+            });
+            break;
+        case 'new':
+            filteredBeds = bedAssignments.filter(b => {
+                if (b.status !== 'occupied') return false;
+                const patient = getPatientByBed(b.bedno);
+                return patient && getPatientTags(patient).includes('new');
+            });
+            break;
+        case 'allergy':
+            filteredBeds = bedAssignments.filter(b => {
+                if (b.status !== 'occupied') return false;
+                const patient = getPatientByBed(b.bedno);
+                return patient && getPatientTags(patient).includes('allergy');
+            });
+            break;
+        default:
+            filteredBeds = bedAssignments;
     }
-    card.innerHTML = `
-      <div class="topbar">
-        <span class="bedno">${b.bedno}</span>
-        <span class="gender-age">${b.status==='empty'?'空床':b.gender+' '+b.age+'岁'}</span>
-      </div>
-      ${b.status==='patient'?`
-      <div class="body">
-        <div class="name">${b.name}</div>
-        <div class="doc">医生：${b.doctor}</div>
-        <div class="tags">
-          ${b.tags.includes('new')?'<span class="tag new">新</span>':''}
-          ${b.tags.includes('critical')?'<span class="tag critical">危重</span>':''}
-          ${b.tags.includes('allergy')?'<span class="tag allergy">过敏</span>':''}
-          ${b.tags.includes('owe')?'<span class="tag owe">欠费</span>':''}
+    
+    filteredBeds.forEach(b => {
+        const patient = b.status === 'occupied' ? getPatientByBed(b.bedno) : null;
+        const card = document.createElement('div');
+        card.className = 'card';
+        
+        if (b.status === 'empty') {
+            card.classList.add('empty');
+            card.innerHTML = `
+                <div class="topbar">
+                    <span class="bedno">${b.bedno}</span>
+                    <span class="gender-age">🛏️ 空床</span>
+                </div>
+                <div class="body">
+                    <div class="empty-actions">
+                        <button class="assign-btn" onclick="assignPatientToBed('${b.bedno}');event.stopPropagation()">分配患者</button>
+                    </div>
+                </div>
+            `;
+        } else if (patient) {
+            const tags = getPatientTags(patient);
+            
+            if (tags.includes('critical')) card.classList.add('critical');
+            if (tags.includes('new')) card.classList.add('new');
+            
+            card.innerHTML = `
+                <div class="topbar">
+                    <span class="bedno">${b.bedno}</span>
+                    <span class="gender-age">${patient.gender || '?'} ${patient.age || '?'}岁</span>
+                </div>
+                <div class="body">
+                    <div class="name">
+                        ${patient.name || '未知'}
+                        ${tags.includes('critical') ? '<span style="color:#ff4d4f">⚠️</span>' : ''}
+                    </div>
+                    <div class="doc">👨‍⚕️ ${patient.doctor || '未分配'}</div>
+                    <div class="diag">${patient.diag ? patient.diag.substring(0,15) + (patient.diag.length>15?'...':'') : '暂无诊断'}</div>
+                    <div class="tags">
+                        ${tags.includes('new') ? '<span class="tag new">新入院</span>' : ''}
+                        ${tags.includes('critical') ? '<span class="tag critical">危重</span>' : ''}
+                        ${tags.includes('allergy') ? '<span class="tag allergy">过敏</span>' : ''}
+                        ${tags.includes('owe') ? '<span class="tag owe">欠费</span>' : ''}
+                        ${tags.includes('surgery') ? '<span class="tag surgery">手术</span>' : ''}
+                    </div>
+                </div>
+            `;
+            card.onclick = () => showDetail(patient, b.bedno);
+        }
+        
+        box.appendChild(card);
+    });
+}
+
+/* -------- 分配患者到床位 -------- */
+function assignPatientToBed(bedno) {
+    // 获取未分配的患者
+    const assignedIds = bedAssignments
+        .filter(b => b.patientId)
+        .map(b => b.patientId);
+    const unassignedPatients = patients.filter(p => !assignedIds.includes(p.id));
+    
+    if (unassignedPatients.length === 0) {
+        alert('没有待分配的患者，请先在医生端录入患者');
+        return;
+    }
+    
+    // 创建选择患者的弹窗
+    const patientList = unassignedPatients.map(p => 
+        `<option value="${p.id}">${p.name} - ${p.diag ? p.diag.substring(0,20) : '暂无诊断'}</option>`
+    ).join('');
+    
+    const selectedId = prompt('请选择患者ID（从下面列表中选择一个ID）:\n' + 
+        unassignedPatients.map(p => `${p.id}: ${p.name}`).join('\n'));
+    
+    if (selectedId) {
+        const patient = unassignedPatients.find(p => p.id === selectedId);
+        if (patient) {
+            const bed = bedAssignments.find(b => b.bedno === bedno);
+            bed.patientId = patient.id;
+            bed.status = 'occupied';
+            bed.admitDate = new Date().toISOString().split('T')[0];
+            saveBedAssignments();
+            renderBeds();
+            updateStats();
+        } else {
+            alert('无效的患者ID');
+        }
+    }
+}
+
+/* -------- 更新统计数据 -------- */
+function updateStats() {
+    const stats = {
+        total: TOTAL_BEDS,
+        occupied: bedAssignments.filter(b => b.status === 'occupied').length,
+        empty: bedAssignments.filter(b => b.status === 'empty').length,
+        new: 0,
+        critical: 0,
+        allergy: 0,
+        owe: 0
+    };
+    
+    bedAssignments.forEach(b => {
+        if (b.status === 'occupied') {
+            const patient = getPatientByBed(b.bedno);
+            if (patient) {
+                const tags = getPatientTags(patient);
+                if (tags.includes('new')) stats.new++;
+                if (tags.includes('critical')) stats.critical++;
+                if (tags.includes('allergy')) stats.allergy++;
+                if (tags.includes('owe')) stats.owe++;
+            }
+        }
+    });
+    
+    document.getElementById('s-total').textContent = stats.total;
+    document.getElementById('s-occupied').textContent = stats.occupied;
+    document.getElementById('s-empty').textContent = stats.empty;
+    document.getElementById('s-new').textContent = stats.new;
+    document.getElementById('s-critical').textContent = stats.critical;
+    document.getElementById('s-allergy').textContent = stats.allergy;
+    document.getElementById('s-owe').textContent = stats.owe;
+}
+
+/* -------- 筛选床位 -------- */
+function filterBeds(filter) {
+    currentFilter = filter;
+    
+    // 更新按钮样式
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    
+    renderBeds();
+}
+
+/* -------- 显示详情弹窗 -------- */
+function showDetail(patient, bedno) {
+    const tags = getPatientTags(patient);
+    const tagsHtml = tags.map(t => {
+        const tagMap = {
+            'new': '新入院',
+            'critical': '危重',
+            'allergy': '过敏',
+            'owe': '欠费',
+            'surgery': '手术'
+        };
+        return `<span class="badge ${t === 'critical' ? 'warning' : 'primary'}">${tagMap[t] || t}</span>`;
+    }).join('');
+    
+    document.getElementById('m-title').textContent = `床位 ${bedno} - ${patient.name}`;
+    document.getElementById('m-body').innerHTML = `
+        <div class="info-row">
+            <span class="info-label">基本信息</span>
+            <span class="info-value">${patient.gender || '?'} / ${patient.age || '?'}岁</span>
         </div>
-      </div>`:''}`;
-    if(b.status==='patient') card.onclick = ()=>showDetail(b);
-    box.appendChild(card);
-  });
-  countStats();
+        <div class="info-row">
+            <span class="info-label">住院号</span>
+            <span class="info-value">${patient.hospno || '未录入'}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">入院日期</span>
+            <span class="info-value">${patient.admitDate || '未录入'}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">初步诊断</span>
+            <span class="info-value">${patient.diag || '暂无'}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">用药医嘱</span>
+            <span class="info-value">${patient.drug || '暂无'}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">检验检查</span>
+            <span class="info-value">${patient.lab || '暂无'} ${patient.exam || ''}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">备注</span>
+            <span class="info-value">${patient.notes || '无'}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">标签</span>
+            <span class="info-value">${tagsHtml || '无'}</span>
+        </div>
+        <div style="margin-top:15px;text-align:center">
+            <button style="background:#ff4d4f;color:#fff;border:none;padding:5px 15px;border-radius:4px;cursor:pointer" onclick="releaseBed('${bedno}')">
+                释放床位
+            </button>
+        </div>
+    `;
+    document.getElementById('modal').classList.add('show');
 }
-renderBeds();
 
-/* -------- 统计 -------- */
-function countStats(){
-  const stats = {
-    all: beds.filter(b=>b.status==='patient').length,
-    new: 0, critical: 0, empty: 0, oper: 0, allergy: 0, owe: 0
-  };
-  beds.forEach(b=>{
-    if(b.status==='empty') stats.empty++;
-    if(b.status==='patient'){
-      if(b.tags.includes('new')) stats.new++;
-      if(b.tags.includes('critical')) stats.critical++;
-      if(b.tags.includes('allergy')) stats.allergy++;
-      if(b.tags.includes('owe')) stats.owe++;
+/* -------- 释放床位 -------- */
+function releaseBed(bedno) {
+    if (confirm('确定要释放这张床位吗？患者将被移出床位列表')) {
+        const bed = bedAssignments.find(b => b.bedno === bedno);
+        bed.patientId = null;
+        bed.status = 'empty';
+        bed.admitDate = null;
+        saveBedAssignments();
+        closeModal();
+        renderBeds();
+        updateStats();
     }
-  });
-  ['all','new','critical','empty','oper','allergy','owe']
-    .forEach(k=>document.getElementById('s-'+k).textContent=stats[k]||0);
 }
 
-/* -------- 详情弹窗 -------- */
-function showDetail(b){
-  document.getElementById('m-title').textContent = `床位 ${b.bedno} 详情`;
-  document.getElementById('m-body').innerHTML = `
-    姓名：${b.name}<br>
-    性别：${b.gender}<br>
-    年龄：${b.age} 岁<br>
-    住院号：${'002'+String(Math.floor(Math.random()*1e5)).padStart(5,'0')}<br>
-    诊断：${b.diag}<br>
-    入区时间：${b.adt}<br>
-    护理等级：${b.level}<br>
-    联系电话：${b.phone}<br>
-    主治医生：${b.doctor}
-  `;
-  document.getElementById('modal').classList.add('show');
-}
-function closeModal(){
-  document.getElementById('modal').classList.remove('show');
+/* -------- 关闭弹窗 -------- */
+function closeModal() {
+    document.getElementById('modal').classList.remove('show');
 }
 
 /* -------- 时钟 -------- */
-function tick(){
-  const now = new Date();
-  document.getElementById('clock').textContent =
-    now.toLocaleDateString('zh-CN') + ' ' + now.toLocaleTimeString('zh-CN');
+function tick() {
+    const now = new Date();
+    document.getElementById('clock').textContent = 
+        now.toLocaleDateString('zh-CN') + ' ' + now.toLocaleTimeString('zh-CN');
 }
-tick(); setInterval(tick,1000);
+
+/* -------- 初始化 -------- */
+function init() {
+    loadData();
+    tick();
+    setInterval(tick, 1000);
+    
+    // 每5分钟自动刷新一次数据
+    setInterval(loadData, 5 * 60 * 1000);
+    
+    // 监听localStorage变化（当医生端保存数据时自动更新）
+    window.addEventListener('storage', function(e) {
+        if (e.key === STORE_KEY) {
+            console.log('检测到数据更新，自动刷新...');
+            loadData();
+        }
+    });
+}
+
+// 启动应用
+init();
 </script>
 </body>
 </html>
-
