@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>电子病历系统 - 用户登录</title>
+    <title>电子病历系统 - 登录</title>
     <style>
         * {
             margin: 0;
@@ -19,8 +19,6 @@
             --accent-doctor: #10b981;
             --text-primary: #ffffff;
             --text-secondary: #94a3b8;
-            --active-color: var(--accent-patient); /* 默认激活色 */
-            --active-rgb: 6, 182, 212; /* 默认激活色RGB */
         }
         
         body {
@@ -105,58 +103,7 @@
             padding: 4rem 2rem;
         }
 
-        .container {
-            max-width: 1200px;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .login-section {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            max-width: 1000px;
-        }
-
-        .login-title {
-            text-align: center;
-            margin-bottom: 3rem;
-        }
-
-        .login-title h2 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            background: linear-gradient(135deg, #ffffff, #94a3b8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .login-title p {
-            font-size: 1.125rem;
-            color: var(--text-secondary);
-        }
-
-        /* 移除原角色选择区域，仅保留登录表单 */
-        .login-wrapper {
-            display: flex;
-            justify-content: center;
-            width: 100%;
-        }
-
-        @media (max-width: 900px) {
-            .login-wrapper {
-                flex-direction: column;
-                align-items: center;
-            }
-        }
-
-        .login-form-container {
+        .login-container {
             max-width: 400px;
             width: 100%;
             background: rgba(26, 31, 58, 0.6);
@@ -166,23 +113,26 @@
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
         }
 
-        .login-form-container h3 {
-            font-size: 1.5rem;
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .login-header h2 {
+            font-size: 1.8rem;
             margin-bottom: 0.5rem;
             color: var(--text-primary);
-            text-align: center;
         }
 
-        .login-form-container .role-indicator {
-            text-align: center;
-            color: var(--text-secondary);
-            margin-bottom: 2rem;
-            font-size: 0.875rem;
-        }
-
-        .role-indicator span {
-            font-weight: 600;
+        .role-tag {
+            display: inline-block;
+            padding: 0.3rem 1rem;
+            border-radius: 20px;
+            background: rgba(var(--active-rgb), 0.1);
             color: var(--active-color);
+            font-size: 0.875rem;
+            font-weight: 600;
+            border: 1px solid var(--active-color);
         }
 
         .form-group {
@@ -265,48 +215,27 @@
             transform: translateY(0);
         }
 
-        .register-link {
-            text-align: center;
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-        }
-
-        .register-link a {
-            color: var(--active-color);
-            text-decoration: none;
-            font-weight: 600;
-            margin-left: 0.25rem;
-        }
-
-        .register-link a:hover {
-            text-decoration: underline;
-        }
-
         footer {
             background: rgba(10, 14, 39, 0.8);
             padding: 2rem;
             text-align: center;
             color: var(--text-secondary);
             font-size: 0.875rem;
+            margin-top: auto;
         }
 
+        /* 响应式适配 */
         @media (max-width: 768px) {
             .header-content {
                 flex-direction: column;
                 gap: 1rem;
             }
-
             nav ul {
                 flex-direction: column;
                 gap: 0.5rem;
                 text-align: center;
             }
-
-            .login-title h2 {
-                font-size: 2rem;
-            }
-
-            .login-form-container {
+            .login-container {
                 padding: 2rem 1.5rem;
             }
         }
@@ -333,49 +262,33 @@
     </header>
 
     <main>
-        <div class="container">
-            <section class="login-section">
-                <div class="login-title">
-                    <h2>欢迎回来</h2>
-                    <p>请登录您的账号</p>
+        <div class="login-container">
+            <div class="login-header">
+                <h2>账号登录</h2>
+                <div class="role-tag" id="roleTag">患者端</div>
+            </div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">账号</label>
+                    <input type="text" id="username" class="form-control" placeholder="请输入账号" required>
                 </div>
-
-                <div class="login-wrapper">
-                    <div class="login-form-container">
-                        <h3>用户登录</h3>
-                        <div class="role-indicator">
-                            当前角色：<span id="roleName">患者</span>
-                        </div>
-                        
-                        <form id="loginForm">
-                            <div class="form-group">
-                                <label for="username">账号</label>
-                                <input type="text" id="username" class="form-control" placeholder="请输入用户名或病历号" required>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="password">密码</label>
-                                <input type="password" id="password" class="form-control" placeholder="请输入密码" required>
-                            </div>
-                            
-                            <div class="form-options">
-                                <label class="remember-me">
-                                    <input type="checkbox" id="remember">
-                                    记住我
-                                </label>
-                                <a href="#" class="forgot-password">忘记密码？</a>
-                            </div>
-                            
-                            <button type="submit" class="login-button" id="loginButton">登录系统</button>
-                            
-                            <div class="register-link">
-                                还没有账号？
-                                <a href="#" id="registerLink">立即注册</a>
-                            </div>
-                        </form>
-                    </div>
+                
+                <div class="form-group">
+                    <label for="password">密码</label>
+                    <input type="password" id="password" class="form-control" placeholder="请输入密码" required>
                 </div>
-            </section>
+                
+                <div class="form-options">
+                    <label class="remember-me">
+                        <input type="checkbox" id="remember">
+                        记住我
+                    </label>
+                    <a href="#" class="forgot-password">忘记密码？</a>
+                </div>
+                
+                <button type="submit" class="login-button" id="loginButton">登录系统</button>
+            </form>
         </div>
     </main>
 
@@ -385,109 +298,86 @@
     </footer>
 
     <script>
+        // 从URL参数获取角色类型
+        const urlParams = new URLSearchParams(window.location.search);
+        const role = urlParams.get('role') || 'patient';
+        
         // 角色配置
         const roles = {
             patient: {
-                name: '患者',
+                name: '患者端',
                 color: '#06b6d4',
                 rgb: '6, 182, 212',
-                placeholder: '请输入用户名或病历号',
+                placeholder: '请输入病历号/用户名',
                 page: 'patient.html'
             },
             nurse: {
-                name: '护士',
+                name: '护士端',
                 color: '#a855f7',
                 rgb: '168, 85, 247',
-                placeholder: '请输入工号或用户名',
+                placeholder: '请输入工号/用户名',
                 page: 'nurse.html'
             },
             doctor: {
-                name: '医生',
+                name: '医生端',
                 color: '#10b981',
                 rgb: '16, 185, 129',
-                placeholder: '请输入工号或用户名',
+                placeholder: '请输入工号/用户名',
                 page: 'doctor.html'
             }
         };
         
-        // 从URL参数获取角色类型（默认患者）
-        const urlParams = new URLSearchParams(window.location.search);
-        let currentRole = urlParams.get('role') || 'patient';
-        // 容错处理：如果传参错误，默认患者
-        if (!roles[currentRole]) currentRole = 'patient';
-
-        // 更新页面样式和内容为当前角色
-        function updatePageForRole(role) {
-            const roleConfig = roles[role];
-            
-            // 1. 更新CSS变量（颜色）
-            document.documentElement.style.setProperty('--active-color', roleConfig.color);
-            document.documentElement.style.setProperty('--active-rgb', roleConfig.rgb);
-            
-            // 2. 更新角色名称显示
-            document.getElementById('roleName').textContent = roleConfig.name;
-            
-            // 3. 更新账号输入框占位符
-            document.getElementById('username').placeholder = roleConfig.placeholder;
-            
-            // 4. 更新logo图标背景色
-            document.querySelector('.logo-icon').style.background = `linear-gradient(135deg, ${roleConfig.color}, ${roleConfig.color})`;
-        }
-
-        // 初始化页面（根据URL参数设置角色）
-        updatePageForRole(currentRole);
-
-        // 登录表单提交逻辑
-        const loginForm = document.getElementById('loginForm');
-        const loginButton = document.getElementById('loginButton');
+        // 设置当前角色样式和内容
+        const currentRole = roles[role] || roles.patient;
+        document.documentElement.style.setProperty('--active-color', currentRole.color);
+        document.documentElement.style.setProperty('--active-rgb', currentRole.rgb);
         
-        loginForm.addEventListener('submit', function(e) {
+        // 更新角色标签
+        document.getElementById('roleTag').textContent = currentRole.name;
+        
+        // 更新账号输入框占位符
+        document.getElementById('username').placeholder = currentRole.placeholder;
+        
+        // 登录表单提交逻辑
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             
-            // 简单验证
             if (!username || !password) {
                 alert('请输入账号和密码');
                 return;
             }
             
-            // 模拟登录过程
+            // 模拟登录
+            const loginButton = document.getElementById('loginButton');
             loginButton.textContent = '登录中...';
             loginButton.disabled = true;
             
-            // 模拟网络请求（1秒后返回结果）
             setTimeout(() => {
                 // 测试账号：123/123
                 if (username === '123' && password === '123') {
-                    const roleConfig = roles[currentRole];
-                    alert(`登录成功！\n正在跳转到${roleConfig.name}工作台...`);
-                    window.location.href = roleConfig.page; // 跳转到对应角色页面
+                    alert(`登录成功！正在跳转到${currentRole.name}...`);
+                    window.location.href = currentRole.page;
                 } else {
-                    alert(`登录失败！\n账号或密码错误\n\n测试账号：123，密码：123`);
+                    alert('账号或密码错误！\n测试账号：123，密码：123');
                     loginButton.textContent = '登录系统';
                     loginButton.disabled = false;
                 }
             }, 1000);
         });
         
-        // 注册链接点击事件
-        document.getElementById('registerLink').addEventListener('click', function(e) {
-            e.preventDefault();
-            alert(`即将跳转到${roles[currentRole].name}注册页面...`);
-        });
-        
-        // 忘记密码链接事件
+        // 忘记密码链接
         document.querySelector('.forgot-password').addEventListener('click', function(e) {
             e.preventDefault();
-            alert(`即将跳转到${roles[currentRole].name}密码重置页面...`);
+            alert(`即将跳转到${currentRole.name}密码重置页面`);
         });
         
         // 测试账号提示
         window.addEventListener('DOMContentLoaded', function() {
-            const testInfo = document.createElement('div');
-            testInfo.style.cssText = `
+            const tip = document.createElement('div');
+            tip.style.cssText = `
                 position: fixed; bottom: 80px; right: 20px;
                 background: rgba(var(--active-rgb), 0.2);
                 border: 1px solid var(--active-color);
@@ -496,8 +386,8 @@
                 z-index: 1000; backdrop-filter: blur(5px);
                 max-width: 200px;
             `;
-            testInfo.innerHTML = '<strong>测试账号：</strong><br>账号：123<br>密码：123';
-            document.body.appendChild(testInfo);
+            tip.innerHTML = `<strong>测试账号：</strong><br>账号：123<br>密码：123`;
+            document.body.appendChild(tip);
         });
     </script>
 </body>
